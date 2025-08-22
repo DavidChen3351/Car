@@ -25,6 +25,7 @@
 #include "stdbool.h"
 #include "moto.h"
 #include "control.h"
+#include "controllerData.h"
 #include "timer.h"
 /* USER CODE END Includes */
 
@@ -35,10 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CHForward 2
-#define CHTurn 0
-#define CH_ControlMode 6
-#define CHTotal 800
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -116,6 +114,7 @@ int main(void)
 	uartInit();
 	motoInit();
 	timerIni();
+	controlIni();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,21 +124,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		float forwardPer = (float)getShift(CHForward) / (float)CHTotal;
-    float turnPer = (float)getShift(CHTurn) / (float)CHTotal;
     if(isDataReady() == true)
     {
       dataProcess();
-			forwardPer = (float)getShift(CHForward) / (float)CHTotal;
-			turnPer = (float)getShift(CHTurn) / (float)CHTotal;
+      setControlTarget();
     }
     if(isTimerUp() == true )
 		{
-			
-			CalculateSpeed();
-			bool mode = getShift(CH_ControlMode) > 0 ? 1 : 0;
-			motoControlSet(forwardPer,turnPer,mode);
-			ResetTimerUp();
+			control();
+			//MotoActivate(0.6,motoLeft);
+			//MotoActivate(-0.2,motoRight);
+			eraseTimerUp();
 		}
   }
   /* USER CODE END 3 */
@@ -277,7 +272,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -330,7 +325,7 @@ static void MX_TIM4_Init(void)
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 15;
+  sConfig.IC1Filter = 0;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
@@ -370,9 +365,9 @@ static void MX_TIM5_Init(void)
 
   /* USER CODE END TIM5_Init 1 */
   htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 42000-1;
+  htim5.Init.Prescaler = 840-1;
   htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 400-1;
+  htim5.Init.Period = 1000-1;
   htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim5) != HAL_OK)

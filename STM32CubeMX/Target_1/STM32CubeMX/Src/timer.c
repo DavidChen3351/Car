@@ -10,16 +10,16 @@ bool isTimerUp()
 {
 	return timerUp;
 }
-void ResetTimerUp()
+void eraseTimerUp()
 {
 	timerUp = false;
 }
-void timerARRCallBack()
+void timerARR_CallBack()
 {
 	timerUp = true;
 }
 void timerIni()
 {
-  HAL_TIM_RegisterCallback(&timer,HAL_TIM_PERIOD_ELAPSED_CB_ID,timerARRCallBack);
+  HAL_TIM_RegisterCallback(&timer,HAL_TIM_PERIOD_ELAPSED_CB_ID,timerARR_CallBack);
 	HAL_TIM_Base_Start_IT(&timer);
 }

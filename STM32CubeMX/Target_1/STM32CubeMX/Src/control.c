@@ -1,149 +1,174 @@
-
-
 #include "main.h"
 #include "control.h"
-#include "stdbool.h"
+#include "controllerData.h"
+#include "PID.h"
+#include "moto.h"
+#include "kalFilter.h"
 
+#define CH_Forward 2
+#define CH_Turn 0
+#define CH_ControlMode 6
+#define MAX_COUNTER_SPEED 6
+#define MAX_CONTROL_PER 1.0f
+#define MIN_CONTROL_PER -1.0f
 
-extern TIM_HandleTypeDef htim3;
-void UART_Recieve_Complete(UART_HandleTypeDef *huart);
+#define INIT_V 0.0f
+#define INIT_VAR_OF_V 1.0f
+#define MEASURE_VARIANCE 0.5f
+#define ACC_VARIANCE 1.0f
 
+struct controlTargets{
+    float forwardPer;
+    float turnPer;
+    bool  mode;
+    float leftMotoTarget;
+    float rightMotoTarget;
+};
 
+enum computeMode{
+	add = 0,
+	minus,
+};
 
-void CHprocess();
+void  controllerToTarget(struct controlTargets *controlTarget);
+float compute(float a,float b,float *result,enum computeMode);
 
-uint8_t Frame_data[25];
-uint8_t REC_data;
-uint8_t datapoi = 0;
+struct controlTargets controlTarget; 
+struct speeds leftMotoSpeed;
 
-enum REC_Status_t{
-	REC_Start =0,
-	REC_Going
-}; 
-enum REC_Status_t REC_Status;
-const uint8_t Frame_Start= 0x0f;
-const uint8_t Frame_End = 0x00;
-const uint8_t StartPOI = 0;
-const uint8_t EndPOI = 24;
+struct speeds rightMotoSpeed;
+struct PIDs PID_Left;
+struct PIDs PID_Right;
 
-bool dataReady;
+struct kals kalLeft;
+struct kals kalRight;
 
-bool isDataReady()
+void controlIni()
 {
-	return dataReady;
-}
-//extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart3;
-void uartInit(){
-	HAL_UART_RegisterCallback(&huart3,HAL_UART_RX_COMPLETE_CB_ID,UART_Recieve_Complete);
-	HAL_UART_Receive_IT(&huart3,&REC_data,1);
-	
-	REC_Status = REC_Start;
+	leftMotoSpeed.whichMoto = motoLeft;
+	rightMotoSpeed.whichMoto = motoRight;
+	kalInit(&kalLeft ,INIT_V,INIT_VAR_OF_V,MEASURE_VARIANCE,ACC_VARIANCE);
+	kalInit(&kalRight,INIT_V,INIT_VAR_OF_V,MEASURE_VARIANCE,ACC_VARIANCE);
 }
 
-void UART_Recieve_Complete(UART_HandleTypeDef *huart)
+void setControlTarget()
 {
-	switch(REC_Status){
-		case REC_Start:
-			
-			if(REC_data == Frame_Start)
-			{
-				REC_Status = REC_Going;
-				Frame_data[0] = REC_data;
-				datapoi++;
-			}
-			HAL_UART_Receive_IT(huart,&REC_data,1);
-			break;
-		case REC_Going:
-			Frame_data[datapoi] = REC_data;
-			if(datapoi < EndPOI)
-			{
-				datapoi++;
-			}
-			else if(datapoi == EndPOI )
-			{
-				if(Frame_data[EndPOI] == Frame_End)
-				{
-					dataReady = 1;
-				}else
-				{
-					dataReady = 0;
-				}
-				REC_Status = REC_Start;
-				datapoi = 0;
-			}
-			HAL_UART_Receive_IT(huart,&REC_data,1);
-			break;
-	}
+	controlTarget.forwardPer = getCH_Per(CH_Forward);
+    controlTarget.turnPer    = getCH_Per(CH_Turn);
+    controlTarget.mode       = getCH_Shift(CH_ControlMode) > 0 ? 1 : 0;
+    controllerToTarget(&controlTarget);
+    PID_Left.targetSpeed  = controlTarget.leftMotoTarget * MAX_COUNTER_SPEED;
+    PID_Right.targetSpeed = controlTarget.rightMotoTarget* MAX_COUNTER_SPEED;
 }
-uint16_t CH[16];
-const int16_t MIDDLE = 992;
-const uint16_t factor = 45;
 
-int16_t shift;
-void dataProcess()
+void control()
 {
-	if(dataReady == 1)
+    speedCal(&leftMotoSpeed);
+    speedCal(&rightMotoSpeed);
+
+	if(leftMotoSpeed.ifNewSpeedCal == true)
 	{
-		
-		
-		CHprocess();
-		dataReady = 0;
-		
+		kalUpdate(&kalLeft,leftMotoSpeed.currentSpeed);
+		leftMotoSpeed.ifNewSpeedCal = false;
+		PID_Cal(&PID_Left,kalLeft.vEstimate,leftMotoSpeed.currentAcc);
+	}else{
+		PID_Cal(&PID_Left,kalLeft.vPredict,leftMotoSpeed.currentAcc);
+	}
+	if(rightMotoSpeed.ifNewSpeedCal == true)
+	{
+		kalUpdate(&kalRight,rightMotoSpeed.currentSpeed);
+		rightMotoSpeed.ifNewSpeedCal = false;
+		PID_Cal(&PID_Right,kalRight.vEstimate,rightMotoSpeed.currentAcc);
+	}else{
+		PID_Cal(&PID_Right,kalRight.vPredict,rightMotoSpeed.currentAcc);
 	}
 	
+	MotoActivate(PID_Left.PID_Strength , motoLeft);
+    MotoActivate(PID_Right.PID_Strength,motoRight);
+
+	kalPredict(&kalLeft , leftMotoSpeed.currentAcc);
+	kalPredict(&kalRight,rightMotoSpeed.currentAcc);
+//		MotoActivate(controlTarget.leftMotoTarget,motoLeft);
+//    MotoActivate(controlTarget.rightMotoTarget,motoRight);
+}
+void controllerToTarget(struct controlTargets *controlTarget)
+{
+	float leftPer;
+	float rightPer;
+    bool mode = controlTarget->mode;
+    float forwardPer = controlTarget->forwardPer;
+    float turnPer = controlTarget->turnPer;
+	if(mode == 0)
+	{
+		if (forwardPer != 0)
+		{
+			if (turnPer > 0)
+			{
+				leftPer = forwardPer;
+				rightPer = forwardPer * (MAX_CONTROL_PER - turnPer);
+			}
+			else
+			{
+				turnPer = -turnPer;
+				leftPer = (MAX_CONTROL_PER - turnPer) * forwardPer;
+				rightPer = forwardPer;
+			}
+		}
+		else
+		{
+			leftPer  = turnPer;
+			rightPer = - turnPer;
+		}
+	}
+	if(mode == 1)
+	{
+//		if(forwardPer + turnPer > 1.0f)
+//		{
+//			leftPer = 1.0f;
+//			rightPer = 1.0f - 2.0f*turnPer;
+//		}
+//		else if(forwardPer - turnPer < -1.0f)
+//		{
+//			leftPer = -1.0f;
+//			rightPer = 1.0f - 2.0f * turnPer;
+//		}
+//		else
+//		{
+		float leftOverFlow = compute(forwardPer,turnPer,&leftPer,add);
+		float rightOverFlow = compute(forwardPer,turnPer,&rightPer,minus);
+		leftPer -= rightOverFlow;
+		rightPer -= leftOverFlow;
+		
+	}
+    controlTarget->leftMotoTarget  = leftPer;
+    controlTarget->rightMotoTarget = rightPer;
+	//struct PIDs PID_Result = PID_Set(targetLeftSpeed,targetRightSpeed);
 }
 
-int16_t getShift(uint16_t CHNUM)
+float compute(float a,float b,float *result,enum computeMode mode)
 {
-	if(CHNUM >=0 && CHNUM <= 15)
+	if(mode == add)
 	{
-		return (int16_t)CH[CHNUM] - MIDDLE;
+		*result = a+b;
 	}else
 	{
-		return 0;
+		*result = a-b;
 	}
 	
-}
-
-
-const uint16_t totaltake = 11;
-const uint16_t totalMask = 0x7ff;
-const int bytelength = 8;
-
-void CHprocess()
-{
-	
-	bool takethree;
-
-	uint16_t lefttake;
-	uint16_t righttake;
-
-	
-	lefttake = 8;
-	
-	righttake = 3;
-	takethree = 0;
-	for(int CHi = 0,datai = 1;CHi<17;CHi++)
+	float overFlow;
+	if(*result > MAX_CONTROL_PER)
 	{
-		if(takethree ==0 ){
-			CH[CHi] = ((((uint16_t)Frame_data[datai] ) >> (bytelength - lefttake)) | (((uint16_t)Frame_data[datai+1] ) << lefttake) );
-			datai++;
-		}
-		else{
-			CH[CHi] = (((uint16_t)Frame_data[datai] >> (bytelength - lefttake)) | ((uint16_t)Frame_data[datai+2]  << (bytelength+lefttake)) | ((uint16_t)Frame_data[datai+1] << lefttake)) ;
-			datai +=2;
-		}
-		CH[CHi] = CH[CHi] & totalMask;
-		lefttake = bytelength - righttake ;
-		if(totaltake - lefttake > 8)
-		{
-			righttake = totaltake - lefttake - 8;
-			takethree = 1;
-		}else
-		{
-			righttake = totaltake - lefttake;
-			takethree = 0;
-		}
+		overFlow = *result - MAX_CONTROL_PER;
+		*result = MAX_CONTROL_PER;
+		return overFlow;
+	}else if(*result < MIN_CONTROL_PER)
+	{
+		overFlow = *result - MIN_CONTROL_PER ;
+		*result = MIN_CONTROL_PER;
+		return overFlow;
 	}
+	return 0.0f;
 }
+
+//	PID_Left->targetSpeed  = leftPer   * (float)MaxSpeed;
+//	PID_Right->targetSpeed  = rightPer * (float)MaxSpeed;

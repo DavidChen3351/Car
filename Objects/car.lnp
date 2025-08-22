@@ -1,7 +1,10 @@
 --cpu=Cortex-M4.fp.sp
-".\objects\control.o"
 ".\objects\moto.o"
 ".\objects\timer.o"
+".\objects\pid.o"
+".\objects\controllerdata.o"
+".\objects\control.o"
+".\objects\kalfilter.o"
 ".\objects\main.o"
 ".\objects\stm32f4xx_it.o"
 ".\objects\stm32f4xx_hal_msp.o"

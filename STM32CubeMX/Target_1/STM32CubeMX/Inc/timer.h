@@ -4,4 +4,4 @@
 
 bool isTimerUp();
 void timerIni();
-void ResetTimerUp();
+void eraseTimerUp();
