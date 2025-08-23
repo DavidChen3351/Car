@@ -5,6 +5,7 @@
 "stm32cubemx\pid.o"
 "stm32cubemx\controllerdata.o"
 "stm32cubemx\timer.o"
+"stm32cubemx\kalfilter.o"
 "stm32cubemx\main.o"
 "stm32cubemx\stm32f4xx_it.o"
 "stm32cubemx\stm32f4xx_hal_msp.o"

@@ -1,9 +1,12 @@
 #include "main.h"
 #include "controllerData.h"
 #include "stdbool.h"
+#include "string.h"
 
 #define CONTROLLER_UART huart3
+#define PORT_TRANSMIT huart1
 extern UART_HandleTypeDef CONTROLLER_UART;
+extern UART_HandleTypeDef PORT_TRANSMIT;
 
 uint8_t Frame_data[25];
 uint8_t REC_data;
@@ -23,7 +26,6 @@ bool dataReady;
 
 uint16_t CH[16];
 const int16_t MIDDLE = 992;
-//const uint16_t factor = 45;
 const uint16_t CH_Total = 800;
 
 enum REC_Status_t{
@@ -64,7 +66,7 @@ void UART_Recieve_Complete(UART_HandleTypeDef *huart)
 			{
 				datapoi++;
 			}
-			else if(datapoi == EndPOI )
+			else if(datapoi >= EndPOI )
 			{
 				if(Frame_data[EndPOI] == Frame_End)
 				{
@@ -138,4 +140,18 @@ void CHprocess()
 			takethree = 0;
 		}
 	}
+}
+
+HAL_UART_StateTypeDef uartState()
+{
+	return HAL_UART_GetState(&PORT_TRANSMIT);
+}
+
+void sendData(char* pData)
+{
+  uint16_t len = strlen(pData);
+  if (HAL_UART_GetState(&PORT_TRANSMIT) == HAL_UART_STATE_READY)
+  {
+		HAL_UART_Transmit_DMA(&PORT_TRANSMIT, (uint8_t*)pData, len);
+  }
 }

@@ -3,62 +3,12 @@
 #include <stdbool.h>
 #include "moto.h"
 
-
-#define COUNTER_PER_ROUTE 13*30*4
-#define MaxPercent 0.5f
-#define MinPercent 0.0f
-
-#define ConstP 0.7f
+#define ConstP 0.6f
 #define ConstI 0.08f
-#define ConstD 0.6f
+#define ConstD 0.9f
 #define MAX_I  0.2f
 #define MIN_I  -0.2f
 
-#define countPerCircle 52
-#define timerInterval 10 // 10 ms
-#define counterARR  65535
-
-#define MaxAccumCal 6
-#define speedAlpha 0.2f
-#define accAlpha 0.2f
-
-
-
-
-
-void speedCal(struct speeds *speed)
-{
-	uint16_t counter  = Moto_GetCounter(speed->whichMoto);	
-	speed->accumCounter = counter - speed->previousCounter;
-	if(speed->accumCal < MaxAccumCal && speed->accumCounter == 0)
-	{
-        speed->accumCal++;
-		speed->ifNewSpeedCal = false;
-        return;
-	}		
-	if(ifEncoderElapsed(speed->whichMoto) == true)
-	{
-		speed->accumCounter -= counterARR;
-        eraseEncoderElapsed(speed->whichMoto);
-	}
-	uint16_t time = ((float)timerInterval) * (float)(speed->accumCal + 1);
-	
-	float newspeed = ((float)speed->accumCounter) / ((float)time);	
-	float lastSpeed = speed->currentSpeed;
-	speed->lastSpeed = lastSpeed;
-	
-	speed->currentSpeed = speedAlpha*newspeed + (1.0f-speedAlpha)*lastSpeed;
-
-	float newAcc = ((float)speed->currentSpeed - (float)speed->lastSpeed) / ((float)time);
-	float lastAcc = speed->currentAcc;
-	
-	speed->currentAcc =    accAlpha*newAcc +     (1.0f-accAlpha)*lastAcc;
-	
-	speed->previousCounter = counter;
-	//speed->accumCounter = 0;
-	speed->accumCal = 0;
-	speed->ifNewSpeedCal = true;
-}
 /*
 @pram struct PIDs *pid store target and result of pid cal
 @pram currentSpeed     speed for cal

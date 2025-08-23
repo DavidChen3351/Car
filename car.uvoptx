@@ -120,7 +120,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name>?</Name>
+          <Name>9</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -152,7 +152,7 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>438</LineNumber>
+          <LineNumber>106</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>6</Address>
           <ByteObject>0</ByteObject>
@@ -161,9 +161,9 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</Filename>
+          <Filename>.\STM32CubeMX\Target_1\STM32CubeMX\Src\moto.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\car\STM32CubeMX/Target_1/STM32CubeMX/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c\438</Expression>
+          <Expression>\\car\STM32CubeMX/Target_1/STM32CubeMX/Src/moto.c\106</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
@@ -180,6 +180,22 @@
           <Filename>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\car\STM32CubeMX/Target_1/STM32CubeMX/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c\722</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>438</LineNumber>
+          <EnabledFlag>0</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -212,6 +228,26 @@
           <count>5</count>
           <WinNumber>1</WinNumber>
           <ItemText>kalLeft</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>PID_Right</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>kalRight</ItemText>
+        </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>datapoi,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>9</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>data</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -256,6 +292,12 @@
       <pszMrulep></pszMrulep>
       <pSingCmdsp></pSingCmdsp>
       <pMultCmdsp></pMultCmdsp>
+      <SystemViewers>
+        <Entry>
+          <Name>System Viewer\TIM2</Name>
+          <WinId>35905</WinId>
+        </Entry>
+      </SystemViewers>
       <DebugDescription>
         <Enable>1</Enable>
         <EnableFlashSeq>1</EnableFlashSeq>
@@ -312,7 +354,7 @@
       <GroupNumber>1</GroupNumber>
       <FileNumber>4</FileNumber>
       <FileType>1</FileType>
-      <tvExp>0</tvExp>
+      <tvExp>1</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>.\STM32CubeMX\Target_1\STM32CubeMX\Src\controllerData.c</PathWithFileName>
@@ -336,7 +378,7 @@
       <GroupNumber>1</GroupNumber>
       <FileNumber>6</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>.\STM32CubeMX\Target_1\STM32CubeMX\Src\kalFilter.c</PathWithFileName>
