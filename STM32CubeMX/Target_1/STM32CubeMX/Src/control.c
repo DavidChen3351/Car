@@ -53,10 +53,12 @@ void controlIni()
 {
 	leftMotoSpeed.whichMoto = motoLeft;
 	rightMotoSpeed.whichMoto = motoRight;
+	
 	kalInit(&kalLeft, INIT_V, INIT_VAR_OF_V, MEASURE_VARIANCE, ACC_VARIANCE);
 	kalInit(&kalRight, INIT_V, INIT_VAR_OF_V, MEASURE_VARIANCE, ACC_VARIANCE);
-	leftEncoderCB_Ini(&leftMotoSpeed);
-	rightEncoderCB_Ini(&rightMotoSpeed);
+	
+	encoderCB_SpeedIni(0,&leftMotoSpeed);
+	encoderCB_SpeedIni(1,&rightMotoSpeed);
 }
 
 void setControlTarget()

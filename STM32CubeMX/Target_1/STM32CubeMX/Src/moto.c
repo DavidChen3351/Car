@@ -27,16 +27,16 @@ extern TIM_HandleTypeDef RightMotoCounter;
 extern TIM_HandleTypeDef LEFT_ENCODER;
 extern TIM_HandleTypeDef RIGHT_ENCODER;
 
-void LeftEncoderCB(TIM_HandleTypeDef *htim);
-void RightEncoderCB(TIM_HandleTypeDef *htim);
+void encoderOverFlowCB(TIM_HandleTypeDef *htim);
+void encoderCB_Ini(uint8_t motoIndex,TIM_HandleTypeDef *htim);
 
 struct encoderCBs
 {
 	struct speeds *pSpeed;
+	TIM_HandleTypeDef *htim;
 };
 
-struct encoderCBs leftCB;
-struct encoderCBs rightCB;
+struct encoderCBs encoderCB[2];
 
 void MotoFor(uint16_t counter, enum moto whichMoto)
 {
@@ -67,43 +67,40 @@ void motoInit()
 	MotoFor(0, motoRight);
 	MotoBack(0, motoRight);
 
-	HAL_TIM_RegisterCallback(&LEFT_ENCODER, HAL_TIM_PERIOD_ELAPSED_CB_ID, LeftEncoderCB);
-	HAL_TIM_RegisterCallback(&RIGHT_ENCODER, HAL_TIM_PERIOD_ELAPSED_CB_ID, RightEncoderCB);
+	encoderCB_Ini(0,&LeftMotoCounter );
+	encoderCB_Ini(1,&RightMotoCounter);
+	
+	HAL_TIM_RegisterCallback(&LEFT_ENCODER, HAL_TIM_PERIOD_ELAPSED_CB_ID,  encoderOverFlowCB);
+	HAL_TIM_RegisterCallback(&RIGHT_ENCODER, HAL_TIM_PERIOD_ELAPSED_CB_ID, encoderOverFlowCB);
 	HAL_TIM_Encoder_Start(&LEFT_ENCODER, TIM_CHANNEL_ALL);
 	HAL_TIM_Encoder_Start(&RIGHT_ENCODER, TIM_CHANNEL_ALL);
 }
 
-void leftEncoderCB_Ini(struct speeds *pSpeed)
+void encoderCB_Ini(uint8_t motoIndex,TIM_HandleTypeDef *htim)
 {
-	leftCB.pSpeed = pSpeed;
+	encoderCB[motoIndex].htim = htim;
 }
 
-void rightEncoderCB_Ini(struct speeds *pSpeed)
+void encoderCB_SpeedIni(uint8_t motoIndex,struct speeds *pSpeed)
 {
-	rightCB.pSpeed = pSpeed;
+	encoderCB[motoIndex].pSpeed = pSpeed;
 }
 
-void LeftEncoderCB(TIM_HandleTypeDef *htim)
+void encoderOverFlowCB(TIM_HandleTypeDef *htim)
 {
-	if (__HAL_TIM_IS_TIM_COUNTING_DOWN(&LEFT_ENCODER))
+	for(uint8_t i = 0;i<2;i++)
 	{
-		leftCB.pSpeed->encoderOverFlow  -= COUNTER_ARR;
-	}
-	else
-	{
-		leftCB.pSpeed->encoderOverFlow  += COUNTER_ARR;
-	}
-}
-
-void RightEncoderCB(TIM_HandleTypeDef *htim)
-{
-	if (__HAL_TIM_IS_TIM_COUNTING_DOWN(&RIGHT_ENCODER))
-	{
-		rightCB.pSpeed->encoderOverFlow  -= COUNTER_ARR;
-	}
-	else
-	{
-		rightCB.pSpeed->encoderOverFlow  += COUNTER_ARR;
+		if(encoderCB[i].htim == htim)
+		{
+			if (__HAL_TIM_IS_TIM_COUNTING_DOWN(&LEFT_ENCODER))
+			{
+				encoderCB[i].pSpeed->totalCounter  -= COUNTER_ARR;
+			}
+			else
+			{
+				encoderCB[i].pSpeed->totalCounter  += COUNTER_ARR;
+			}
+		}
 	}
 }
 
@@ -156,26 +153,19 @@ float Moto_GetAngular(enum moto whichMoto)
 void speedCal(struct speeds *pSpeed)
 {
 	
-	int64_t counter = Moto_GetCounter(pSpeed->whichMoto);
-	pSpeed->diffCounter = (int32_t)counter - (int32_t)pSpeed->previousCounter;
+	int32_t counter = Moto_GetCounter(pSpeed->whichMoto) + pSpeed->totalCounter;
+	int32_t diff = counter - pSpeed->previousCounter;
 	
-	pSpeed->diffCounter += pSpeed->encoderOverFlow;
-	pSpeed->encoderOverFlow = 0;
-	
-	if (pSpeed->accumCal < MaxAccumCal && pSpeed->diffCounter == 0)
+	if (pSpeed->accumCal < MaxAccumCal && diff == 0)
 	{
 		pSpeed->accumCal++;
 		pSpeed->ifNewSpeedCal = false;
 		return;
 	}
-	//	if(ifEncoderElapsed(speed->whichMoto) == true)
-	//	{
-	//		speed->accumCounter -= counterARR;
-	//    eraseEncoderElapsed(speed->whichMoto);
-	//	}
+	
 	uint16_t time = ((float)timerInterval) * (float)(pSpeed->accumCal + 1);
 
-	float newspeed = ((float)pSpeed->diffCounter) / ((float)time);
+	float newspeed = ((float)diff) / ((float)time);
 	float lastSpeed = pSpeed->currentSpeed;
 	pSpeed->lastSpeed = lastSpeed;
 
@@ -187,7 +177,6 @@ void speedCal(struct speeds *pSpeed)
 	pSpeed->currentAcc = accAlpha * newAcc + (1.0f - accAlpha) * lastAcc;
 
 	pSpeed->previousCounter = counter;
-	// speed->accumCounter = 0;
 	pSpeed->accumCal = 0;
 	pSpeed->ifNewSpeedCal = true;
 }

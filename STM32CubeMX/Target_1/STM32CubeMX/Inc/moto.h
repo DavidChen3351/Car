@@ -8,11 +8,9 @@ enum moto{
 };
 
 struct speeds{
-	int64_t  previousPosition;
-	int32_t  diffCounter;
-	int32_t  encoderOverFlow;
+	int32_t  totalCounter;
 	uint16_t accumCal ;
-	uint16_t previousCounter;
+	int32_t previousCounter;
 	float    currentSpeed;          
 	float    currentAcc;
     
@@ -22,9 +20,7 @@ struct speeds{
 };
 
 void motoInit();
-void leftEncoderCB_Ini(struct speeds *pSpeed);
-void rightEncoderCB_Ini(struct speeds *pSpeed);
-
+void encoderCB_SpeedIni(uint8_t motoIndex,struct speeds *pSpeed);
 void MotoActivate(float per,enum moto whichMoto);
 uint16_t Moto_GetCounter(enum moto whichMoto);
 
