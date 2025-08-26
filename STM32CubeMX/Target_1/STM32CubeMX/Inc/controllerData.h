@@ -9,4 +9,5 @@ int16_t getCH_Shift(uint16_t CH);
 float   getCH_Per(uint16_t CH);
 
 void sendData(char* pData);
+bool canSendData();
 HAL_UART_StateTypeDef uartState();

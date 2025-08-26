@@ -94,11 +94,11 @@ void encoderOverFlowCB(TIM_HandleTypeDef *htim)
 		{
 			if (__HAL_TIM_IS_TIM_COUNTING_DOWN(&LEFT_ENCODER))
 			{
-				encoderCB[i].pSpeed->totalCounter  -= COUNTER_ARR;
+				encoderCB[i].pSpeed->overFlowTimes  -= 1;
 			}
 			else
 			{
-				encoderCB[i].pSpeed->totalCounter  += COUNTER_ARR;
+				encoderCB[i].pSpeed->overFlowTimes  += 1;
 			}
 		}
 	}
@@ -150,11 +150,22 @@ float Moto_GetAngular(enum moto whichMoto)
 	return counterToAngular(Moto_GetCounter(whichMoto));
 }
 
+int32_t speedCalRawDiff(uint16_t current, uint16_t prev)
+{
+    int32_t delta = (int32_t)current - (int32_t)prev;
+    if (delta > (COUNTER_ARR / 2)) {
+        delta -= (COUNTER_ARR + 1); // 正向溢出
+    } else if (delta < -(COUNTER_ARR / 2)) {
+        delta += (COUNTER_ARR + 1); // 反向溢出
+    }
+    return delta;
+}
+
 void speedCal(struct speeds *pSpeed)
 {
 	
-	int32_t counter = Moto_GetCounter(pSpeed->whichMoto) + pSpeed->totalCounter;
-	int32_t diff = counter - pSpeed->previousCounter;
+	uint16_t counter = Moto_GetCounter(pSpeed->whichMoto);
+	int32_t diff = speedCalRawDiff(counter, pSpeed->previousCounter);
 	
 	if (pSpeed->accumCal < MaxAccumCal && diff == 0)
 	{
@@ -165,16 +176,13 @@ void speedCal(struct speeds *pSpeed)
 	
 	uint16_t time = ((float)timerInterval) * (float)(pSpeed->accumCal + 1);
 
-	float newspeed = ((float)diff) / ((float)time);
+	float newSpeed = ((float)diff) / ((float)time);
+	pSpeed->currentSpeed = newSpeed;
+	
+	pSpeed->currentAcc = ((float)pSpeed->currentSpeed - (float)pSpeed->lastSpeed) / ((float)time);
+	
 	float lastSpeed = pSpeed->currentSpeed;
 	pSpeed->lastSpeed = lastSpeed;
-
-	pSpeed->currentSpeed = speedAlpha * newspeed + (1.0f - speedAlpha) * lastSpeed;
-
-	float newAcc = ((float)pSpeed->currentSpeed - (float)pSpeed->lastSpeed) / ((float)time);
-	float lastAcc = pSpeed->currentAcc;
-
-	pSpeed->currentAcc = accAlpha * newAcc + (1.0f - accAlpha) * lastAcc;
 
 	pSpeed->previousCounter = counter;
 	pSpeed->accumCal = 0;

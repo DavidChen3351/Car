@@ -14,9 +14,9 @@
 #define MIN_CONTROL_PER -1.0f
 
 #define INIT_V 0.0f
-#define INIT_VAR_OF_V 1.0f
-#define MEASURE_VARIANCE 0.5f
-#define ACC_VARIANCE 1.0f
+#define INIT_VAR_OF_V 0.1f
+#define MEASURE_VARIANCE 0.1f // 0.05
+#define ACC_VARIANCE 0.0002f  		// 0.03
 
 struct controlTargets
 {
@@ -33,7 +33,7 @@ enum computeMode
 	minus,
 };
 
-static char data[32];
+static char data[100];
 
 void controllerToTarget(struct controlTargets *controlTarget);
 float compute(float a, float b, float *result, enum computeMode);
@@ -75,6 +75,10 @@ void control()
 {
 	speedCal(&leftMotoSpeed);
 	speedCal(&rightMotoSpeed);
+
+	kalPredict(&kalLeft,  leftMotoSpeed.currentAcc);
+	kalPredict(&kalRight, rightMotoSpeed.currentAcc);
+
 	if (leftMotoSpeed.ifNewSpeedCal == true)
 	{
 		kalUpdate(&kalLeft, leftMotoSpeed.currentSpeed);
@@ -85,6 +89,7 @@ void control()
 	{
 		PID_Cal(&PID_Left, kalLeft.vPredict, leftMotoSpeed.currentAcc);
 	}
+
 	if (rightMotoSpeed.ifNewSpeedCal == true)
 	{
 		kalUpdate(&kalRight, rightMotoSpeed.currentSpeed);
@@ -99,12 +104,12 @@ void control()
 //  MotoActivate(PID_Left.PID_Strength , motoLeft);
 //  MotoActivate(PID_Right.PID_Strength,motoRight);
 
-	kalPredict(&kalLeft, leftMotoSpeed.currentAcc);
-	kalPredict(&kalRight, rightMotoSpeed.currentAcc);
-
-	sprintf(data, "%2.2f,%2.2f,%2.2f\n", kalLeft.vEstimate, kalLeft.vPredict, leftMotoSpeed.currentSpeed);
-	sendData(data);
-
+	if(canSendData())
+	{
+		sprintf(data,"%2.8f,%2.8f,%2.8f,%2.2f\n", kalLeft.vEstimate,kalLeft.kalGain,leftMotoSpeed.currentSpeed,leftMotoSpeed.currentAcc);
+		sendData(data);
+	}
+	
 	MotoActivate(controlTarget.leftMotoTarget, motoLeft);
 	MotoActivate(controlTarget.rightMotoTarget, motoRight);
 }

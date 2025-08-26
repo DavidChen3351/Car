@@ -8,12 +8,11 @@ enum moto{
 };
 
 struct speeds{
-	int32_t  totalCounter;
-	uint16_t accumCal ;
-	int32_t previousCounter;
-	float    currentSpeed;          
-	float    currentAcc;
-    
+	uint16_t  accumCal ;
+	uint16_t  previousCounter;
+	float     currentSpeed;          
+	float     currentAcc;
+    int16_t   overFlowTimes;
 	enum moto whichMoto;
 	bool      ifNewSpeedCal;
 	float     lastSpeed;
