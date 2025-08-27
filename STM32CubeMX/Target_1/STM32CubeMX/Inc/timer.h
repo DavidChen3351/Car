@@ -2,6 +2,4 @@
 #include "stdbool.h"
 #include "main.h"
 
-bool isTimerUp();
 void timerIni();
-void eraseTimerUp();

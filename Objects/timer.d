@@ -24,4 +24,6 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\timer.h
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\timer.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\control.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\moto.h

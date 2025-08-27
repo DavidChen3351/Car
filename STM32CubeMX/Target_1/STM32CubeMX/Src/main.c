@@ -21,6 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include"cmsis_os2.h"
+#include"RTE_Components.h"
+#include  CMSIS_device_header
+
 #include "control.h"
 #include "stdbool.h"
 #include "moto.h"
@@ -55,8 +59,32 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart1_tx;
 
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE BEGIN PV */
-uint16_t timerCount = 0;
+osThreadId_t dataProcessHandle;
+osThreadId_t controlTargetHandle;
+osThreadId_t controlHandle;
+osEventFlagsId_t controlFlags;
+
+const osThreadAttr_t dataProcess_attr = {
+  .priority = osPriorityHigh,
+	.stack_size = 128*8,
+};
+const osThreadAttr_t controlTarget_attr = {
+  .priority = osPriorityHigh,
+	.stack_size = 128*8,
+};
+const osThreadAttr_t control_attr = {
+  .priority = osPriorityHigh,
+	.stack_size = 128*8,
+};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -70,6 +98,8 @@ static void MX_USART3_UART_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
+void StartDefaultTask(void *argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -123,6 +153,46 @@ int main(void)
 	controlIni();
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  //defaultTaskHandle   = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* USER CODE BEGIN RTOS_THREADS */
+	dataProcessHandle   = osThreadNew(dataProcessTask,NULL,&dataProcess_attr);
+  controlTargetHandle = osThreadNew(controlTargetTask,NULL,&dataProcess_attr);
+  controlHandle       = osThreadNew(controlTask,NULL,&dataProcess_attr);
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  //osEventFlagsId_t dataProcessFlags = osEventFlagsNew(NULL);
+  controlFlags = osEventFlagsNew(NULL);
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -130,18 +200,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if(isDataReady() == true)
-    {
-      dataProcess();
-      setControlTarget();
-    }
-    if(isTimerUp() == true )
-		{
-			control();
-			//MotoActivate(0.6,motoLeft);
-			//MotoActivate(-0.2,motoRight);
-			eraseTimerUp();
-		}
+//    if(isDataReady() == true)
+//    {
+//      dataProcess();
+//      setControlTarget();
+//    }
+//    if(isTimerUp() == true )
+//		{
+//			control();
+//			//MotoActivate(0.6,motoLeft);
+//			//MotoActivate(-0.2,motoRight);
+//			eraseTimerUp();
+//		}
   }
   /* USER CODE END 3 */
 }
@@ -530,7 +600,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA2_Stream7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 
 }
@@ -562,6 +632,24 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END 5 */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

@@ -1,5 +1,9 @@
 #include "main.h"
 #include "moto.h"
+
 void controlIni();
-void setControlTarget();
-void control();
+void controlTargetTask(void *para);
+void controlTask(void *para);
+
+void controlTargetFlagReady();
+void controlFlagReady();

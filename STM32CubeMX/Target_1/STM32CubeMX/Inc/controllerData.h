@@ -3,7 +3,7 @@
 #include "stdbool.h"
 bool isDataReady();
 void uartInit();
-void dataProcess();
+void dataProcessTask(void*para);
 
 int16_t getCH_Shift(uint16_t CH);
 float   getCH_Per(uint16_t CH);

@@ -6,6 +6,10 @@
 #include "kalFilter.h"
 #include "stdio.h"
 
+#include"cmsis_os2.h"
+#include"RTE_Components.h"
+#include  CMSIS_device_header
+
 #define CH_Forward 2
 #define CH_Turn 0
 #define CH_ControlMode 6
@@ -17,6 +21,12 @@
 #define INIT_VAR_OF_V 0.1f
 #define MEASURE_VARIANCE 0.1f // 0.05
 #define ACC_VARIANCE 0.0002f  		// 0.03
+
+#define controlTargetFlag 0x00000001U
+#define controlFlag       0x00000002U
+extern osEventFlagsId_t controlFlags;
+
+static char data[100];
 
 struct controlTargets
 {
@@ -33,8 +43,6 @@ enum computeMode
 	minus,
 };
 
-static char data[100];
-
 void controllerToTarget(struct controlTargets *controlTarget);
 float compute(float a, float b, float *result, enum computeMode);
 
@@ -49,6 +57,16 @@ struct PIDs PID_Right;
 struct kals kalLeft;
 struct kals kalRight;
 
+void controlTargetFlagReady()
+{
+	osEventFlagsSet(controlFlags,controlTargetFlag);
+}
+
+void controlFlagReady()
+{
+	osEventFlagsSet(controlFlags,controlFlag);
+}
+
 void controlIni()
 {
 	leftMotoSpeed.whichMoto = motoLeft;
@@ -61,58 +79,67 @@ void controlIni()
 	encoderCB_SpeedIni(1,&rightMotoSpeed);
 }
 
-void setControlTarget()
+void controlTargetTask(void *para)
 {
-	controlTarget.forwardPer = getCH_Per(CH_Forward);
-	controlTarget.turnPer = getCH_Per(CH_Turn);
-	controlTarget.mode = getCH_Shift(CH_ControlMode) > 0 ? 1 : 0;
-	controllerToTarget(&controlTarget);
-	PID_Left.targetSpeed = controlTarget.leftMotoTarget * MAX_COUNTER_SPEED;
-	PID_Right.targetSpeed = controlTarget.rightMotoTarget * MAX_COUNTER_SPEED;
+	while(true)
+	{
+		osEventFlagsWait(controlFlags,controlTargetFlag,osFlagsWaitAny, osWaitForever);
+
+		controlTarget.forwardPer = getCH_Per(CH_Forward);
+		controlTarget.turnPer = getCH_Per(CH_Turn);
+		controlTarget.mode = getCH_Shift(CH_ControlMode) > 0 ? 1 : 0;
+		controllerToTarget(&controlTarget);
+		PID_Left.targetSpeed = controlTarget.leftMotoTarget * MAX_COUNTER_SPEED;
+		PID_Right.targetSpeed = controlTarget.rightMotoTarget * MAX_COUNTER_SPEED;
+	}
 }
 
-void control()
+void controlTask(void * para)
 {
-	speedCal(&leftMotoSpeed);
-	speedCal(&rightMotoSpeed);
-
-	kalPredict(&kalLeft,  leftMotoSpeed.currentAcc);
-	kalPredict(&kalRight, rightMotoSpeed.currentAcc);
-
-	if (leftMotoSpeed.ifNewSpeedCal == true)
+	while(true)
 	{
-		kalUpdate(&kalLeft, leftMotoSpeed.currentSpeed);
-		leftMotoSpeed.ifNewSpeedCal = false;
-		PID_Cal(&PID_Left, kalLeft.vEstimate, leftMotoSpeed.currentAcc);
-	}
-	else
-	{
-		PID_Cal(&PID_Left, kalLeft.vPredict, leftMotoSpeed.currentAcc);
-	}
+		osEventFlagsWait(controlFlags,controlFlag,osFlagsWaitAny, osWaitForever);
 
-	if (rightMotoSpeed.ifNewSpeedCal == true)
-	{
-		kalUpdate(&kalRight, rightMotoSpeed.currentSpeed);
-		rightMotoSpeed.ifNewSpeedCal = false;
-		PID_Cal(&PID_Right, kalRight.vEstimate, rightMotoSpeed.currentAcc);
-	}
-	else
-	{
-		PID_Cal(&PID_Right, kalRight.vPredict, rightMotoSpeed.currentAcc);
-	}
+		speedCal(&leftMotoSpeed);
+		speedCal(&rightMotoSpeed);
 
+		kalPredict(&kalLeft,  leftMotoSpeed.currentAcc);
+		kalPredict(&kalRight, rightMotoSpeed.currentAcc);
+
+		if (leftMotoSpeed.ifNewSpeedCal == true)
+		{
+			kalUpdate(&kalLeft, leftMotoSpeed.currentSpeed);
+			leftMotoSpeed.ifNewSpeedCal = false;
+			PID_Cal(&PID_Left, kalLeft.vEstimate, leftMotoSpeed.currentAcc);
+		}
+		else
+		{
+			PID_Cal(&PID_Left, kalLeft.vPredict, leftMotoSpeed.currentAcc);
+		}
+
+		if (rightMotoSpeed.ifNewSpeedCal == true)
+		{
+			kalUpdate(&kalRight, rightMotoSpeed.currentSpeed);
+			rightMotoSpeed.ifNewSpeedCal = false;
+			PID_Cal(&PID_Right, kalRight.vEstimate, rightMotoSpeed.currentAcc);
+		}
+		else
+		{
+			PID_Cal(&PID_Right, kalRight.vPredict, rightMotoSpeed.currentAcc);
+		}
 //  MotoActivate(PID_Left.PID_Strength , motoLeft);
 //  MotoActivate(PID_Right.PID_Strength,motoRight);
-
-	if(canSendData())
-	{
-		sprintf(data,"%2.8f,%2.8f,%2.8f,%2.2f\n", kalLeft.vEstimate,kalLeft.kalGain,leftMotoSpeed.currentSpeed,leftMotoSpeed.currentAcc);
-		sendData(data);
+		if(canSendData())
+		{
+			sprintf(data,"%2.8f,%2.8f,%2.8f,%2.2f\n", kalLeft.vEstimate,kalLeft.kalGain,leftMotoSpeed.currentSpeed,leftMotoSpeed.currentAcc);
+			sendData(data);
+		}
+		MotoActivate(controlTarget.leftMotoTarget, motoLeft);
+		MotoActivate(controlTarget.rightMotoTarget, motoRight);
+		osDelay(10);
 	}
-	
-	MotoActivate(controlTarget.leftMotoTarget, motoLeft);
-	MotoActivate(controlTarget.rightMotoTarget, motoRight);
 }
+
 void controllerToTarget(struct controlTargets *controlTarget)
 {
 	float leftPer;
@@ -144,18 +171,6 @@ void controllerToTarget(struct controlTargets *controlTarget)
 	}
 	if (mode == 1)
 	{
-		//		if(forwardPer + turnPer > 1.0f)
-		//		{
-		//			leftPer = 1.0f;
-		//			rightPer = 1.0f - 2.0f*turnPer;
-		//		}
-		//		else if(forwardPer - turnPer < -1.0f)
-		//		{
-		//			leftPer = -1.0f;
-		//			rightPer = 1.0f - 2.0f * turnPer;
-		//		}
-		//		else
-		//		{
 		float leftOverFlow = compute(forwardPer, turnPer, &leftPer, add);
 		float rightOverFlow = compute(forwardPer, turnPer, &rightPer, minus);
 		leftPer -= rightOverFlow;
@@ -163,7 +178,6 @@ void controllerToTarget(struct controlTargets *controlTarget)
 	}
 	controlTarget->leftMotoTarget = leftPer;
 	controlTarget->rightMotoTarget = rightPer;
-	// struct PIDs PID_Result = PID_Set(targetLeftSpeed,targetRightSpeed);
 }
 
 float compute(float a, float b, float *result, enum computeMode mode)
@@ -192,6 +206,3 @@ float compute(float a, float b, float *result, enum computeMode mode)
 	}
 	return 0.0f;
 }
-
-//	PID_Left->targetSpeed  = leftPer   * (float)MaxSpeed;
-//	PID_Right->targetSpeed  = rightPer * (float)MaxSpeed;

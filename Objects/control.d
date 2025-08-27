@@ -28,4 +28,6 @@
   STM32CubeMX\Target_1\STM32CubeMX\Inc\moto.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\controllerData.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\PID.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\kalFilter.h
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\kalFilter.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.2.0\CMSIS\RTOS2\Include\cmsis_os2.h \
+  RTE\_Target_1\RTE_Components.h

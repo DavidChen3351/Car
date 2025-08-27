@@ -2,17 +2,28 @@
 #include "controllerData.h"
 #include "stdbool.h"
 #include "string.h"
+#include "control.h"	
+
+#include"cmsis_os2.h"
+#include"RTE_Components.h"
+#include  CMSIS_device_header
 
 #define CONTROLLER_UART huart3
 #define PORT_TRANSMIT huart1
+
+#define frameReadyFlag 0x00000001U 
+
 extern UART_HandleTypeDef CONTROLLER_UART;
 extern UART_HandleTypeDef PORT_TRANSMIT;
+
+extern osThreadId_t dataProcessHandle;
 
 uint8_t Frame_data[25];
 uint8_t REC_data;
 uint8_t datapoi = 0;
-
 enum REC_Status_t REC_Status;
+uint16_t CH[16];
+
 const uint8_t Frame_Start = 0x0f;
 const uint8_t Frame_End = 0x00;
 const uint8_t StartPOI = 0;
@@ -22,9 +33,6 @@ const uint16_t totaltake = 11;
 const uint16_t totalMask = 0x7ff;
 const int bytelength = 8;
 
-bool dataReady;
-
-uint16_t CH[16];
 const int16_t MIDDLE = 992;
 const uint16_t CH_Total = 800;
 
@@ -37,9 +45,9 @@ enum REC_Status_t
 void CHprocess();
 void UART_Recieve_Complete(UART_HandleTypeDef *huart);
 
-bool isDataReady()
+void setFrameReadyFlag()
 {
-	return dataReady;
+	osEventFlagsSet(dataProcessHandle,frameReadyFlag);
 }
 
 void uartInit()
@@ -73,11 +81,7 @@ void UART_Recieve_Complete(UART_HandleTypeDef *huart)
 		{
 			if (Frame_data[EndPOI] == Frame_End)
 			{
-				dataReady = 1;
-			}
-			else
-			{
-				dataReady = 0;
+				setFrameReadyFlag();
 			}
 			REC_Status = REC_Start;
 			datapoi = 0;
@@ -87,10 +91,14 @@ void UART_Recieve_Complete(UART_HandleTypeDef *huart)
 	}
 }
 
-void dataProcess()
+void dataProcessTask(void* para)
 {
-	CHprocess();
-	dataReady = 0;
+	while(true)
+	{
+		CHprocess();
+		controlFlagReady();
+		osThreadFlagsWait(frameReadyFlag,osFlagsWaitAny, osWaitForever);
+	}
 }
 
 int16_t getCH_Shift(uint16_t which_CH)
