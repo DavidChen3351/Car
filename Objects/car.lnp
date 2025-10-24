@@ -5,6 +5,8 @@
 ".\objects\controllerdata.o"
 ".\objects\control.o"
 ".\objects\kalfilter.o"
+".\objects\gpio.o"
+".\objects\ringbuffer.o"
 ".\objects\main.o"
 ".\objects\stm32f4xx_it.o"
 ".\objects\stm32f4xx_hal_msp.o"

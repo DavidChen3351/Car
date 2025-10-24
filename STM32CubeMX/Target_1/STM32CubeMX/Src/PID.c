@@ -1,38 +1,82 @@
 #include "main.h"
+
 #include "PID.h"
 #include <stdbool.h>
 #include "moto.h"
 
-#define ConstP 0.6f
-#define ConstI 0.08f
-#define ConstD 0.9f
-#define MAX_I  0.2f
-#define MIN_I  -0.2f
+#define DEFAULT_Kp 0.1f
+#define DEFAULT_Ki 0.1f
+#define DEFAULT_Kd 0.1f
+#define DEFAULT_I_Size 0.5f
+#define DEFAULT_PID_SIZE 1.0f
 
 /*
-@pram struct PIDs *pid store target and result of pid cal
-@pram currentSpeed     speed for cal
-@pram currentAcc       acc for cal
+*@pram PID *pid store target ,Intergral,current and last value
+*@return PID Strength
+*calculate PID
+*Intergral is limit by I_Size
+*PID_Strength is limit by PID_Size
 */
-void PID_Cal(struct PIDs *pid,float currentSpeed,float currentAcc)
+float PID_Cal(PID *pid)
 {
-	
-	float P_Strength = (pid->targetSpeed  - currentSpeed) * ((float)ConstP);
-	if((pid->I_Strength  > MAX_I && (pid->targetSpeed  - currentSpeed) < 0 ) || (pid->I_Strength  < MIN_I && (pid->targetSpeed - currentSpeed) > 0)  ||  (pid->I_Strength >=MIN_I && pid->I_Strength  <= MAX_I))
+	float P_Strength = (pid->target  - pid->currentValue) * (pid->Kp);
+
+	float IntergralGain = (pid->target  - pid->currentValue) * (pid->Ki);
+	if(IntergralGain >0 && pid->I_Strength + IntergralGain < pid->I_Size)
 	{
-		//pid->I_Strength  += (pid->targetSpeed  - speed->currentSpeed) * ((float)timerInterval) * ((float)ConstI);
-		pid->I_Strength  += (pid->targetSpeed  - currentSpeed) * ((float)ConstI);
+		pid->I_Strength += IntergralGain;
+	}else if(IntergralGain <0 && pid->I_Strength + IntergralGain > -pid->I_Size)
+	{
+		pid->I_Strength += IntergralGain;
 	}
-	//float D_Strength = speed->currentAcc / ((float)timerInterval) * ((float)ConstD);
-	float D_Strength = currentAcc * ((float)ConstD);
-	pid->PID_Strength = P_Strength + pid->I_Strength  + D_Strength;
+
+	float D_Strength  = (pid->currentValue - pid->lastValue) * (pid->Kd);
+	pid->lastValue = pid->currentValue;
+
+	float PID_Strength = P_Strength + pid->I_Strength + D_Strength;
+
+	if(PID_Strength > pid->PID_Size)
+	{
+		PID_Strength = pid->PID_Size;
+	}else if(PID_Strength < -pid->PID_Size)
+	{
+		PID_Strength = -pid->PID_Size;
+	}
+
+	pid->PID_Output = PID_Strength;
+	return PID_Strength;
 }
 
-//struct PIDs PID_Set(float targetLeft,float targetRight,struct speeds *leftSpeed,struct speeds *rightSpeed)
-//{
-//  struct PIDs PID_Result;
-//	
-//	PID_Result.PID_Left  = PID_Cal(targetLeft ,leftSpeed,&I_Left_Strength );
-//	PID_Result.PID_Right = PID_Cal(targetRight,rightSpeed,&I_Right_Strength);
-//	return PID_Result;
-//}
+/*
+*set the target value of PID
+*/
+inline void PID_SetTarget(PID *pid,float target)
+{
+	pid->target = target;
+}
+
+/*
+*set the current value of PID
+*/
+inline void PID_SetValue(PID *pid,float currentValue)
+{
+	pid->currentValue = currentValue;
+}
+
+void PID_SetParam(PID* pid,float Kp,float Ki,float Kd,float I_Size,float PID_Size)
+{
+	pid->Kp = Kp;
+	pid->Ki = Ki;
+	pid->Kd = Kd;
+	pid->I_Size = I_Size;
+	pid->PID_Size = PID_Size;
+}
+
+void PID_SetDefaultParam(PID* pid)
+{
+	pid->Kp = DEFAULT_Kp;
+	pid->Ki = DEFAULT_Ki;
+	pid->Kd = DEFAULT_Kd;
+	pid->I_Size = DEFAULT_I_Size;
+	pid->PID_Size = DEFAULT_PID_SIZE;
+}

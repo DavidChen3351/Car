@@ -1,29 +1,37 @@
 #pragma once
+
 #include "main.h"
 #include "stdbool.h"
+#include "kalFilter.h"
+#include "GPIO.h"
+#include "PID.h"
 
-enum moto{
-	motoLeft = 0,
-	motoRight 
-};
+#define MOTO_NUM 2
 
-struct speeds{
+typedef uint8_t motoIndex;
+
+typedef struct speedStruct{
 	uint16_t  accumCal ;
 	uint16_t  previousCounter;
+
 	float     currentSpeed;          
 	float     currentAcc;
-    int16_t   overFlowTimes;
-	enum moto whichMoto;
-	bool      ifNewSpeedCal;
 	float     lastSpeed;
-};
 
-void motoInit();
-void encoderCB_SpeedIni(uint8_t motoIndex,struct speeds *pSpeed);
-void MotoActivate(float per,enum moto whichMoto);
-uint16_t Moto_GetCounter(enum moto whichMoto);
+	Kal kal;
+}speed;
 
-float counterToAngular(uint16_t counterDelt);
-float speedToAngularSpeed(float speed);
-float Moto_GetAngular(enum moto whichMoto);
-void speedCal(struct speeds *speed);
+typedef struct motoStruct{
+	GPIO_motoHandle motoGPIO;
+	speed motoSpeed;
+	PID motoPID;
+}motoHandle;
+
+typedef struct targetStruct{
+	float targetPer[MOTO_NUM];
+}target;
+
+void motoIni();
+void speedCal(motoHandle* moto);
+void motoControl(target* t);
+motoHandle *getMotoStruct(motoIndex index);

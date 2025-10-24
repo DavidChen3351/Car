@@ -1,15 +1,18 @@
 #include "moto.h"
+#include "GPIO.h"
 #include "main.h"
-#include "stdbool.h"
+#include "kalFilter.h"
+#include <stdbool.h>
 
 #define LeftMotoCounter htim2
 #define RightMotoCounter htim9
+
 #define RIGHT_ENCODER htim3
 #define LEFT_ENCODER htim4
 
-#define MaxPercent 1.0f
-#define MinPercent 0.0f
-#define PWM_ARR 100
+#define MAX_PER 1.0f
+#define MIN_PER -1.0f
+
 #define COUNTER_PER_ROUTE 13 * 30 * 4
 #define PI 3.14159265f
 
@@ -21,120 +24,94 @@
 #define speedAlpha 0.2f
 #define accAlpha 0.2f
 
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim9;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 
-extern TIM_HandleTypeDef LeftMotoCounter;
-extern TIM_HandleTypeDef RightMotoCounter;
-extern TIM_HandleTypeDef LEFT_ENCODER;
-extern TIM_HandleTypeDef RIGHT_ENCODER;
+int32_t speedCalRawDiff(uint16_t current, uint16_t prev);
 
-void encoderOverFlowCB(TIM_HandleTypeDef *htim);
-void encoderCB_Ini(uint8_t motoIndex,TIM_HandleTypeDef *htim);
+static motoHandle motoArray[MOTO_NUM];
+//void encoderOverFlowCB(TIM_HandleTypeDef *htim);
+//void encoderCB_Ini(uint8_t motoIndex,TIM_HandleTypeDef *htim);
 
-struct encoderCBs
+//struct encoderCBs
+//{
+//	struct speeds *moto_>motoSpeed;
+//	TIM_HandleTypeDef *htim;
+//};
+
+//struct encoderCBs encoderCB[2];
+
+//void encoderCB_Ini(uint8_t motoIndex,TIM_HandleTypeDef *htim)
+//{
+//	encoderCB[motoIndex].htim = htim;
+//}
+
+//void encoderCB_SpeedIni(uint8_t motoIndex,struct speeds *moto_>motoSpeed)
+//{
+//	encoderCB[motoIndex].moto_>motoSpeed = moto_>motoSpeed;
+//}
+
+//void encoderOverFlowCB(TIM_HandleTypeDef *htim)
+//{
+//	for(uint8_t i = 0;i<2;i++)
+//	{
+//		if(encoderCB[i].htim == htim)
+//		{
+//			if (__HAL_TIM_IS_TIM_COUNTING_DOWN(&LEFT_ENCODER))
+//			{
+//				encoderCB[i].moto->motoSpeed.overFlowTimes  -= 1;
+//			}
+//			else
+//			{
+//				encoderCB[i].moto->motoSpeed.overFlowTimes  += 1;
+//			}
+//		}
+//	}
+//}
+
+/*
+*set default parameters for motoGPIO,PID,KAL and speed structure
+*/
+void motoIni()
 {
-	struct speeds *pSpeed;
-	TIM_HandleTypeDef *htim;
-};
-
-struct encoderCBs encoderCB[2];
-
-void MotoFor(uint16_t counter, enum moto whichMoto)
-{
-	if (whichMoto == motoLeft)
-		__HAL_TIM_SetCompare(&LeftMotoCounter, TIM_CHANNEL_1, counter);
-	else
-		__HAL_TIM_SetCompare(&RightMotoCounter, TIM_CHANNEL_1, counter);
-}
-
-void MotoBack(uint16_t counter, enum moto whichMoto)
-{
-	if (whichMoto == motoLeft)
-		__HAL_TIM_SetCompare(&LeftMotoCounter, TIM_CHANNEL_4, counter);
-	else
-		__HAL_TIM_SetCompare(&RightMotoCounter, TIM_CHANNEL_2, counter);
-}
-
-void motoInit()
-{
-	HAL_TIM_PWM_Start(&LeftMotoCounter, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&LeftMotoCounter, TIM_CHANNEL_4);
-	HAL_TIM_PWM_Start(&RightMotoCounter, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&RightMotoCounter, TIM_CHANNEL_2);
-
-	MotoFor(0, motoLeft);
-	MotoBack(0, motoLeft);
-
-	MotoFor(0, motoRight);
-	MotoBack(0, motoRight);
-
-	encoderCB_Ini(0,&LeftMotoCounter );
-	encoderCB_Ini(1,&RightMotoCounter);
-	
-	HAL_TIM_RegisterCallback(&LEFT_ENCODER, HAL_TIM_PERIOD_ELAPSED_CB_ID,  encoderOverFlowCB);
-	HAL_TIM_RegisterCallback(&RIGHT_ENCODER, HAL_TIM_PERIOD_ELAPSED_CB_ID, encoderOverFlowCB);
-	HAL_TIM_Encoder_Start(&LEFT_ENCODER, TIM_CHANNEL_ALL);
-	HAL_TIM_Encoder_Start(&RIGHT_ENCODER, TIM_CHANNEL_ALL);
-}
-
-void encoderCB_Ini(uint8_t motoIndex,TIM_HandleTypeDef *htim)
-{
-	encoderCB[motoIndex].htim = htim;
-}
-
-void encoderCB_SpeedIni(uint8_t motoIndex,struct speeds *pSpeed)
-{
-	encoderCB[motoIndex].pSpeed = pSpeed;
-}
-
-void encoderOverFlowCB(TIM_HandleTypeDef *htim)
-{
-	for(uint8_t i = 0;i<2;i++)
+	for(motoIndex i=0;i<MOTO_NUM;i++)
 	{
-		if(encoderCB[i].htim == htim)
+		motoHandle* motoPtr = &motoArray[i];
+		//GPIO ini
+		switch (i)
 		{
-			if (__HAL_TIM_IS_TIM_COUNTING_DOWN(&LEFT_ENCODER))
+		case 0:
 			{
-				encoderCB[i].pSpeed->overFlowTimes  -= 1;
+				motoPtr->motoGPIO.motoInput_htim    = &htim2;
+				motoPtr->motoGPIO.motoEncoder_htim  = &htim4;
+				motoPtr->motoGPIO.motoInputForCH    = TIM_CHANNEL_1;
+				motoPtr->motoGPIO.motoInputBackCH   = TIM_CHANNEL_4;
 			}
-			else
+			break;
+		case 1:
 			{
-				encoderCB[i].pSpeed->overFlowTimes  += 1;
+				motoPtr->motoGPIO.motoInput_htim    = &htim9;
+				motoPtr->motoGPIO.motoEncoder_htim  = &htim3;
+				motoPtr->motoGPIO.motoInputForCH    = TIM_CHANNEL_1;
+				motoPtr->motoGPIO.motoInputBackCH   = TIM_CHANNEL_2;
 			}
+			break;
 		}
+		//speed ini
+		motoPtr->motoSpeed.accumCal        = 0;
+		motoPtr->motoSpeed.previousCounter = GPIO_GetMotoCounter(&(motoPtr->motoGPIO));
+		motoPtr->motoSpeed.currentSpeed    = 0.0f;
+		motoPtr->motoSpeed.currentAcc      = 0.0f;
+		motoPtr->motoSpeed.lastSpeed       = 0.0f;
+		kalDefaultParams(&(motoPtr->motoSpeed.kal));
+		
+		//PID ini
+		PID_SetDefaultParam(&(motoPtr->motoPID));
 	}
 }
-
-uint16_t counterCal(float per)
-{
-	if (per > MaxPercent)
-		per = MaxPercent;
-	if (per < MinPercent)
-		per = MinPercent;
-	return (uint16_t)(per * (float)PWM_ARR);
-}
-
-void MotoActivate(float per, enum moto whichMoto)
-{
-	if (per >= 0)
-	{
-		MotoFor(counterCal(per), whichMoto);
-		MotoBack(0, whichMoto);
-	}
-	else
-	{
-		MotoFor(0, whichMoto);
-		MotoBack(counterCal(per * -1.0f), whichMoto);
-	}
-}
-
-uint16_t Moto_GetCounter(enum moto whichMoto)
-{
-	if (whichMoto == motoLeft)
-		return __HAL_TIM_GetCounter(&LEFT_ENCODER);
-	else
-		return __HAL_TIM_GetCounter(&RIGHT_ENCODER);
-}
-
+/*
 float counterToAngular(uint16_t counterDelt)
 {
 	return ((float)counterDelt) / ((float)COUNTER_PER_ROUTE) * (2.0f * PI);
@@ -144,47 +121,93 @@ float speedToAngularSpeed(float speed)
 {
 	return ((float)speed) / ((float)COUNTER_PER_ROUTE) * (2.0f * PI);
 }
+*/
 
-float Moto_GetAngular(enum moto whichMoto)
-{
-	return counterToAngular(Moto_GetCounter(whichMoto));
-}
-
-int32_t speedCalRawDiff(uint16_t current, uint16_t prev)
+/*
+*this function calculate the raw difference between two counters, considering overflow
+*/
+inline int32_t speedCalRawDiff(uint16_t current, uint16_t prev)
 {
     int32_t delta = (int32_t)current - (int32_t)prev;
-    if (delta > (COUNTER_ARR / 2)) {
+    if (delta > (COUNTER_ARR / 2)) 
+	{
         delta -= (COUNTER_ARR + 1); // 正向溢出
-    } else if (delta < -(COUNTER_ARR / 2)) {
+    } else if (delta < -(COUNTER_ARR / 2)) 
+	{
         delta += (COUNTER_ARR + 1); // 反向溢出
     }
     return delta;
 }
 
-void speedCal(struct speeds *pSpeed)
+void speedCal(motoHandle* moto)
 {
+	//kal predict
+	kalPredict(&(moto->motoSpeed.kal),moto->motoSpeed.currentAcc);
+
+	//get moto current conter and previous counter,calculate difference
+	uint16_t counter = GPIO_GetMotoCounter(&(moto->motoGPIO));
+	int32_t diff = speedCalRawDiff(counter, moto->motoSpeed.previousCounter);
 	
-	uint16_t counter = Moto_GetCounter(pSpeed->whichMoto);
-	int32_t diff = speedCalRawDiff(counter, pSpeed->previousCounter);
-	
-	if (pSpeed->accumCal < MaxAccumCal && diff == 0)
+	//if difference is zero,accumlate times util reach max accumlate times 
+	if (moto->motoSpeed.accumCal < MaxAccumCal && diff == 0)
 	{
-		pSpeed->accumCal++;
-		pSpeed->ifNewSpeedCal = false;
+		moto->motoSpeed.accumCal++;
 		return;
 	}
-	
-	uint16_t time = ((float)timerInterval) * (float)(pSpeed->accumCal + 1);
 
-	float newSpeed = ((float)diff) / ((float)time);
-	pSpeed->currentSpeed = newSpeed;
-	
-	pSpeed->currentAcc = ((float)pSpeed->currentSpeed - (float)pSpeed->lastSpeed) / ((float)time);
-	
-	float lastSpeed = pSpeed->currentSpeed;
-	pSpeed->lastSpeed = lastSpeed;
+	//program reach here if 
+	//1.no accumlation and nonzero difference
+	//2.accumlation reach max,even if difference is zero.
 
-	pSpeed->previousCounter = counter;
-	pSpeed->accumCal = 0;
-	pSpeed->ifNewSpeedCal = true;
+	//calculate time interval based on accumlate times
+	float time = ((float)timerInterval) * (float)(moto->motoSpeed.accumCal + 1);
+
+	//calculate speed
+	float newSpeed = ((float)diff) / (time);
+	
+	//calculate acceleration based on speed difference and time interval
+	//lastSpeed comes from kal,while currentSpeed does not
+	moto->motoSpeed.currentAcc = (moto->motoSpeed.currentSpeed - moto->motoSpeed.lastSpeed) / (time);
+
+	//kal update
+	kalUpdate(&(moto->motoSpeed.kal),newSpeed);
+	moto->motoSpeed.currentSpeed = moto->motoSpeed.kal.vEstimate;
+
+	//prepare for next calculation
+	//1.update last speed
+	//2.update previous counter
+	//3.reset accumlate cal
+	moto->motoSpeed.lastSpeed = moto->motoSpeed.currentSpeed;
+	moto->motoSpeed.previousCounter = counter;
+	moto->motoSpeed.accumCal = 0;
+	//moto->motoSpeed.ifNewSpeedCal = true;
+}
+
+/*
+*@para targetPer should between -1.0 and 1.0
+*control moto according to targetPer
+*/
+void motoControl(target* t)
+{
+	for(uint8_t i=0;i<MOTO_NUM;i++)
+	{
+		motoHandle* moto = &motoArray[i];
+		float targetPer = t->targetPer[i];
+		
+		PID_SetTarget(&(moto->motoPID),targetPer);
+
+		speedCal(moto);
+		PID_SetValue(&(moto->motoPID),moto->motoSpeed.currentSpeed);
+	
+		GPIO_SetMoto(&(moto->motoGPIO),PID_Cal(&(moto->motoPID)));
+	}
+}
+
+/*
+*return pointer to moto structure
+*used for debug 
+*/
+motoHandle *getMotoStruct(motoIndex index)
+{
+	return &motoArray[index];
 }

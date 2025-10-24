@@ -61,7 +61,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-
+#define controllerDataIdle 0x00000001U
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

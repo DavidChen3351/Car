@@ -1,18 +1,19 @@
 #include "main.h"
 #include "control.h"
 #include "controllerData.h"
-#include "PID.h"
 #include "moto.h"
-#include "kalFilter.h"
-#include "stdio.h"
-
+#include <stdio.h>
 #include"cmsis_os2.h"
 #include"RTE_Components.h"
+
 #include  CMSIS_device_header
 
-#define CH_Forward 2
-#define CH_Turn 0
-#define CH_ControlMode 6
+#define CH_Forward (uint8_t)2
+#define CH_Turn (uint8_t)0
+#define CH_ControlMode (uint8_t)6
+#define CONTROLLER_CONTROL_MODE_ONE_SIDE_TURN 1
+#define CONTROLLER_CONTROL_MODE_DIFFERENTIAL_TURN 0
+
 #define MAX_COUNTER_SPEED 6
 #define MAX_CONTROL_PER 1.0f
 #define MIN_CONTROL_PER -1.0f
@@ -22,165 +23,77 @@
 #define MEASURE_VARIANCE 0.1f // 0.05
 #define ACC_VARIANCE 0.0002f  		// 0.03
 
-#define controlTargetFlag 0x00000001U
-#define controlFlag       0x00000002U
-extern osEventFlagsId_t controlFlags;
+#define DEFAULT_Kp 0.1f
+#define DEFAULT_Ki 0.1f
+#define DEFAULT_Kd 0.1f
+#define MAX_I_Size 0.5f
+#define MAX_PID_SIZE 1.0f
+
+enum computeMode 
+{
+	add = 0,
+	minus
+};
 
 static char data[100];
 
-struct controlTargets
-{
-	float forwardPer;
-	float turnPer;
-	bool mode;
-	float leftMotoTarget;
-	float rightMotoTarget;
-};
+target controlTarget;
+extern osEventFlagsId_t controlTargetFlags;
 
-enum computeMode
-{
-	add = 0,
-	minus,
-};
+float compute(float a, float b, float *result, enum computeMode mode);
+void getTargetFromController(target* controlTarget);
 
-void controllerToTarget(struct controlTargets *controlTarget);
-float compute(float a, float b, float *result, enum computeMode);
-
-struct controlTargets controlTarget;
-
-struct speeds leftMotoSpeed;
-struct speeds rightMotoSpeed;
-
-struct PIDs PID_Left;
-struct PIDs PID_Right;
-
-struct kals kalLeft;
-struct kals kalRight;
-
-void controlTargetFlagReady()
-{
-	osEventFlagsSet(controlFlags,controlTargetFlag);
-}
-
-void controlFlagReady()
-{
-	osEventFlagsSet(controlFlags,controlFlag);
-}
+//void controlFlagReady()
+//{
+//	osEventFlagsSet(controlFlags,controlFlag);
+//}
 
 void controlIni()
 {
-	leftMotoSpeed.whichMoto = motoLeft;
-	rightMotoSpeed.whichMoto = motoRight;
-	
-	kalInit(&kalLeft, INIT_V, INIT_VAR_OF_V, MEASURE_VARIANCE, ACC_VARIANCE);
-	kalInit(&kalRight, INIT_V, INIT_VAR_OF_V, MEASURE_VARIANCE, ACC_VARIANCE);
-	
-	encoderCB_SpeedIni(0,&leftMotoSpeed);
-	encoderCB_SpeedIni(1,&rightMotoSpeed);
+	motoIni();
+	controllerDataIni();
 }
 
 void controlTargetTask(void *para)
 {
+	(void)para;
 	while(true)
 	{
-		osEventFlagsWait(controlFlags,controlTargetFlag,osFlagsWaitAny, osWaitForever);
-
-		controlTarget.forwardPer = getCH_Per(CH_Forward);
-		controlTarget.turnPer = getCH_Per(CH_Turn);
-		controlTarget.mode = getCH_Shift(CH_ControlMode) > 0 ? 1 : 0;
-		controllerToTarget(&controlTarget);
-		PID_Left.targetSpeed = controlTarget.leftMotoTarget * MAX_COUNTER_SPEED;
-		PID_Right.targetSpeed = controlTarget.rightMotoTarget * MAX_COUNTER_SPEED;
+		osEventFlagsWait(controlTargetFlags,controllerDataIdle,osFlagsWaitAny, osWaitForever);
+		controllerDataProcess();
+		getTargetFromController(&controlTarget);
 	}
 }
 
 void controlTask(void * para)
 {
+	(void)para;
+	float	consolePidOut;
+	float	consoleTarget; 
+	float	consoleSpeed ;
+	
 	while(true)
 	{
-		osEventFlagsWait(controlFlags,controlFlag,osFlagsWaitAny, osWaitForever);
+		motoControl(&controlTarget);
 
-		speedCal(&leftMotoSpeed);
-		speedCal(&rightMotoSpeed);
-
-		kalPredict(&kalLeft,  leftMotoSpeed.currentAcc);
-		kalPredict(&kalRight, rightMotoSpeed.currentAcc);
-
-		if (leftMotoSpeed.ifNewSpeedCal == true)
-		{
-			kalUpdate(&kalLeft, leftMotoSpeed.currentSpeed);
-			leftMotoSpeed.ifNewSpeedCal = false;
-			PID_Cal(&PID_Left, kalLeft.vEstimate, leftMotoSpeed.currentAcc);
-		}
-		else
-		{
-			PID_Cal(&PID_Left, kalLeft.vPredict, leftMotoSpeed.currentAcc);
-		}
-
-		if (rightMotoSpeed.ifNewSpeedCal == true)
-		{
-			kalUpdate(&kalRight, rightMotoSpeed.currentSpeed);
-			rightMotoSpeed.ifNewSpeedCal = false;
-			PID_Cal(&PID_Right, kalRight.vEstimate, rightMotoSpeed.currentAcc);
-		}
-		else
-		{
-			PID_Cal(&PID_Right, kalRight.vPredict, rightMotoSpeed.currentAcc);
-		}
-//  MotoActivate(PID_Left.PID_Strength , motoLeft);
-//  MotoActivate(PID_Right.PID_Strength,motoRight);
+		motoHandle *moto = getMotoStruct(0);
+		
+		consolePidOut = moto->motoPID.PID_Output;
+		consoleTarget = moto->motoPID.target;
+		consoleSpeed = moto->motoSpeed.currentSpeed;
 		if(canSendData())
 		{
-			sprintf(data,"%2.8f,%2.8f,%2.8f,%2.2f\n", kalLeft.vEstimate,kalLeft.kalGain,leftMotoSpeed.currentSpeed,leftMotoSpeed.currentAcc);
+			sprintf(data,"%2.8f,%2.8f,%2.8f\n",consolePidOut,consoleTarget,consoleSpeed);
 			sendData(data);
 		}
-		MotoActivate(controlTarget.leftMotoTarget, motoLeft);
-		MotoActivate(controlTarget.rightMotoTarget, motoRight);
 		osDelay(10);
 	}
 }
 
-void controllerToTarget(struct controlTargets *controlTarget)
-{
-	float leftPer;
-	float rightPer;
-	bool mode = controlTarget->mode;
-	float forwardPer = controlTarget->forwardPer;
-	float turnPer = controlTarget->turnPer;
-	if (mode == 0)
-	{
-		if (forwardPer != 0)
-		{
-			if (turnPer > 0)
-			{
-				leftPer = forwardPer;
-				rightPer = forwardPer * (MAX_CONTROL_PER - turnPer);
-			}
-			else
-			{
-				turnPer = -turnPer;
-				leftPer = (MAX_CONTROL_PER - turnPer) * forwardPer;
-				rightPer = forwardPer;
-			}
-		}
-		else
-		{
-			leftPer = turnPer;
-			rightPer = -turnPer;
-		}
-	}
-	if (mode == 1)
-	{
-		float leftOverFlow = compute(forwardPer, turnPer, &leftPer, add);
-		float rightOverFlow = compute(forwardPer, turnPer, &rightPer, minus);
-		leftPer -= rightOverFlow;
-		rightPer -= leftOverFlow;
-	}
-	controlTarget->leftMotoTarget = leftPer;
-	controlTarget->rightMotoTarget = rightPer;
-}
-
-float compute(float a, float b, float *result, enum computeMode mode)
+/*
+*a fun used to help compute left and right moto target percentage
+*/
+inline float compute(float a, float b, float *result, enum computeMode mode)
 {
 	if (mode == add)
 	{
@@ -205,4 +118,52 @@ float compute(float a, float b, float *result, enum computeMode mode)
 		return overFlow;
 	}
 	return 0.0f;
+}
+
+/*
+*ths fun get control target from controller data
+*/
+void getTargetFromController(target* controlTarget)
+{
+	float CH_forwardPer = getCH_Per(CH_Forward);
+	float CH_turnPer = getCH_Per(CH_Turn);
+	bool controlMode = getCH_Shift(CH_ControlMode) == CONTROLLER_CONTROL_MODE_ONE_SIDE_TURN ? 
+	CONTROLLER_CONTROL_MODE_ONE_SIDE_TURN : CONTROLLER_CONTROL_MODE_DIFFERENTIAL_TURN;
+	float leftPer;
+	float rightPer;
+
+	if (controlMode == CONTROLLER_CONTROL_MODE_DIFFERENTIAL_TURN)
+	{
+		if (CH_forwardPer != 0)
+		{
+			if (CH_turnPer > 0)
+			{
+				leftPer = CH_forwardPer;
+				rightPer = CH_forwardPer * (MAX_CONTROL_PER - CH_turnPer);
+			}
+			else
+			{
+				CH_turnPer = -CH_turnPer;
+				leftPer = (MAX_CONTROL_PER - CH_turnPer) * CH_forwardPer;
+				rightPer = CH_forwardPer;
+			}
+		}
+		else
+		{
+			leftPer = CH_turnPer;
+			rightPer = -CH_turnPer;
+		}
+	}
+	else
+	{
+		float leftOverFlow = compute(CH_forwardPer, CH_turnPer, &leftPer, add);
+		float rightOverFlow = compute(CH_forwardPer, CH_turnPer, &rightPer, minus);
+		leftPer -= rightOverFlow;
+		rightPer -= leftOverFlow;
+	}
+	#if MOTO_NUM == 2
+		controlTarget->targetPer[0] = leftPer;
+		controlTarget->targetPer[1] = rightPer;
+	#endif
+	
 }

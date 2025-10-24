@@ -3,109 +3,84 @@
 #include "stdbool.h"
 #include "string.h"
 #include "control.h"	
+#include "RingBuffer.h"
 
 #include"cmsis_os2.h"
 #include"RTE_Components.h"
 #include  CMSIS_device_header
 
-#define CONTROLLER_UART huart3
-#define PORT_TRANSMIT huart1
+#define CONTROLLER_HUART &huart3
+#define TRANSMIT_HUART &huart1
 
-#define frameReadyFlag 0x00000001U 
+#define BUFFER_SIZE 50
+#define DMA_BUFFER_SIZE 50
 
-extern UART_HandleTypeDef CONTROLLER_UART;
-extern UART_HandleTypeDef PORT_TRANSMIT;
+#define BYTE_LENGTH  (uint8_t)8   //a byte is 8 bit
+#define FRAME_LENGTH (uint8_t)25  //number of bytes a frame contains
+#define FRAME_TOTAL_CH 	(uint8_t)16  //total channels of a frame
+#define CH_LENGTH    (uint8_t)11  //bit length of a channel
+#define FRAME_START  (uint8_t)0x0f//start byte of frame
+#define FRAME_END    (uint8_t)0x00//end byte of frame
 
-extern osThreadId_t dataProcessHandle;
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart3;
 
-uint8_t Frame_data[25];
-uint8_t REC_data;
-uint8_t datapoi = 0;
-enum REC_Status_t REC_Status;
-uint16_t CH[16];
-
-const uint8_t Frame_Start = 0x0f;
-const uint8_t Frame_End = 0x00;
-const uint8_t StartPOI = 0;
-const uint8_t EndPOI = 24;
-
-const uint16_t totaltake = 11;
-const uint16_t totalMask = 0x7ff;
-const int bytelength = 8;
+extern osThreadId_t     dataProcessHandle;
+extern osEventFlagsId_t controlTargetFlags;
 
 const int16_t MIDDLE = 992;
 const uint16_t CH_Total = 800;
 
-enum REC_Status_t
-{
-	REC_Start = 0,
-	REC_Going
-};
-
 void CHprocess();
-void UART_Recieve_Complete(UART_HandleTypeDef *huart);
+void RxEventCallback(UART_HandleTypeDef *huart,uint16_t Pos);
 
-void setFrameReadyFlag()
+uint16_t CH[16];
+
+static uint8_t buffer[BUFFER_SIZE];
+static uint8_t DMAbuffer[DMA_BUFFER_SIZE];
+static RingBuffer rb;
+
+void controllerDataIni() // need to be called once at the begining
 {
-	osEventFlagsSet(dataProcessHandle,frameReadyFlag);
+	//HAL_UART_RegisterCallback(CONTROLLER_HUART, HAL_UART_RX_COMPLETE_CB_ID, UART_Recieve_Complete);//need change
+	HAL_UART_RegisterRxEventCallback(CONTROLLER_HUART,RxEventCallback);
+	RingBufferIni(BUFFER_SIZE,buffer,&rb);
 }
 
-void uartInit()
+/*
+*the process of handle data from controller
+*/
+void controllerDataProcess()
 {
-	HAL_UART_RegisterCallback(&CONTROLLER_UART, HAL_UART_RX_COMPLETE_CB_ID, UART_Recieve_Complete);
-	HAL_UART_Receive_IT(&CONTROLLER_UART, &REC_data, 1);
-	REC_Status = REC_Start;
+	CHprocess();
+	HAL_UARTEx_ReceiveToIdle_DMA(CONTROLLER_HUART,DMAbuffer,DMA_BUFFER_SIZE);
 }
 
-void UART_Recieve_Complete(UART_HandleTypeDef *huart)
+/*
+*when uart is not receiving,function will be called
+*/
+void RxEventCallback(UART_HandleTypeDef *huart,uint16_t Pos)
 {
-	switch (REC_Status)
+	(void)huart;
+	//move data from dma_buffer to ringbuffer
+	uint8_t bufferSpace = RingBuffer_GetRemain(&rb);
+	for(int i=0;i<bufferSpace && i<Pos;i++)
 	{
-	case REC_Start:
+		RingBuffer_Write(&rb,DMAbuffer[i]);
+	}  
 
-		if (REC_data == Frame_Start)
-		{
-			REC_Status = REC_Going;
-			Frame_data[0] = REC_data;
-			datapoi++;
-		}
-		HAL_UART_Receive_IT(huart, &REC_data, 1);
-		break;
-	case REC_Going:
-		Frame_data[datapoi] = REC_data;
-		if (datapoi < EndPOI)
-		{
-			datapoi++;
-		}
-		else if (datapoi >= EndPOI)
-		{
-			if (Frame_data[EndPOI] == Frame_End)
-			{
-				setFrameReadyFlag();
-			}
-			REC_Status = REC_Start;
-			datapoi = 0;
-		}
-		HAL_UART_Receive_IT(huart, &REC_data, 1);
-		break;
-	}
+	//tell program RingBuffer should be handlled
+	osEventFlagsSet(controlTargetFlags,controllerDataIdle);
 }
 
-void dataProcessTask(void* para)
+/*
+*return the shift value of a channel
+*/
+inline int16_t getCH_Shift(uint8_t CH_Index)
 {
-	while(true)
+	if (CH_Index >= 0 && CH_Index <= 15)
 	{
-		CHprocess();
-		controlFlagReady();
-		osThreadFlagsWait(frameReadyFlag,osFlagsWaitAny, osWaitForever);
-	}
-}
-
-int16_t getCH_Shift(uint16_t which_CH)
-{
-	if (which_CH >= 0 && which_CH <= 15)
-	{
-		return (int16_t)CH[which_CH] - MIDDLE;
+		return (int16_t)CH[CH_Index] - MIDDLE;
 	}
 	else
 	{
@@ -113,64 +88,94 @@ int16_t getCH_Shift(uint16_t which_CH)
 	}
 }
 
-float getCH_Per(uint16_t which_CH)
+/*
+*return the percentage value of a channel
+*/
+float getCH_Per(uint8_t CH_Index)
 {
-	return (float)getCH_Shift(which_CH) / (float)CH_Total;
+	return (float)getCH_Shift(CH_Index) / (float)CH_Total;
 }
 
+/*
+*this fun process data from controller to controller Channel
+*fun should be called when idle event callback is triggered AND
+*callback fun has moved data from DMA buffer to RingBuffer
+*/
 void CHprocess()
 {
-
-	bool takethree;
-
-	uint16_t lefttake;
-	uint16_t righttake;
-
-	lefttake = 8;
-
-	righttake = 3;
-	takethree = 0;
-	for (int CHi = 0, datai = 1; CHi < 17; CHi++)
+	uint8_t length = RingBuffer_GetLength(&rb);
+	if(length > FRAME_LENGTH)
 	{
-		if (takethree == 0)
+		for(int i=0;i<length - FRAME_LENGTH;i++)
 		{
-			CH[CHi] = ((((uint16_t)Frame_data[datai]) >> (bytelength - lefttake)) | (((uint16_t)Frame_data[datai + 1]) << lefttake));
-			datai++;
+			//validate frame start and frame end
+			if(RingBuffer_Read(&rb,0) 				== FRAME_START && 
+			   RingBuffer_Read(&rb,FRAME_LENGTH - 1) == FRAME_END)
+			{
+				break;
+			}else
+			{//if not validate,RingBuffer add read index
+				RingBuffer_AddReadIndex(&rb,0x01);
+			}
 		}
-		else
-		{
-			CH[CHi] = (((uint16_t)Frame_data[datai] >> (bytelength - lefttake)) | ((uint16_t)Frame_data[datai + 2] << (bytelength + lefttake)) | ((uint16_t)Frame_data[datai + 1] << lefttake));
-			datai += 2;
-		}
-		CH[CHi] = CH[CHi] & totalMask;
-		lefttake = bytelength - righttake;
-		if (totaltake - lefttake > 8)
-		{
-			righttake = totaltake - lefttake - 8;
-			takethree = 1;
-		}
-		else
-		{
-			righttake = totaltake - lefttake;
-			takethree = 0;
-		}
+		//no validate frame start and end
+		return;
+	}else
+	{
+		//no enough data   
+		return;
 	}
-}
+	
+	//compute frame data into Channel data
+	for(int i = 0;i< FRAME_TOTAL_CH;i++)
+	{
+		uint8_t bufferIndex = 0;
+		uint8_t CH_Index;
+		uint8_t taken;
+		uint8_t leftTakeNUM;
+		uint8_t rightTakeNUM;
+		
+		leftTakeNUM  = BYTE_LENGTH - taken;
+		rightTakeNUM = CH_LENGTH - leftTakeNUM;
+		
+		uint16_t leftTake;
+		uint16_t rightTake;
 
-HAL_UART_StateTypeDef uartState()
-{
-	return HAL_UART_GetState(&PORT_TRANSMIT);
+		if(rightTakeNUM > BYTE_LENGTH)
+		{
+			uint16_t middleTake;
+			rightTakeNUM -= BYTE_LENGTH;
+
+			leftTake   = (uint16_t)RingBuffer_Read(&rb,bufferIndex) >> (CH_LENGTH - leftTakeNUM);
+			bufferIndex ++;
+			middleTake = (uint16_t)RingBuffer_Read(&rb,bufferIndex) >> (rightTakeNUM);
+			bufferIndex ++;
+			rightTake  = (uint16_t)RingBuffer_Read(&rb,bufferIndex) << (BYTE_LENGTH - rightTakeNUM);
+		
+			CH[CH_Index] = leftTake || middleTake || rightTake;
+		}else
+		{
+			leftTake  = (uint16_t)RingBuffer_Read(&rb,bufferIndex) >> (CH_LENGTH - leftTakeNUM);
+			bufferIndex ++;
+			rightTake = (uint16_t)RingBuffer_Read(&rb,bufferIndex) << (BYTE_LENGTH - rightTakeNUM);
+
+			CH[CH_Index] = leftTake || rightTake;
+		}
+
+		taken = rightTake;
+		CH_Index ++;
+	}
 }
 
 void sendData(char *pData)
 {
 	uint16_t len = strlen(pData);
-	HAL_UART_Transmit_DMA(&PORT_TRANSMIT, (uint8_t *)pData, len);
+	HAL_UART_Transmit_DMA(TRANSMIT_HUART, (uint8_t *)pData, len);
 }
 
 bool canSendData()
 {
-	if (HAL_UART_GetState(&PORT_TRANSMIT) == HAL_UART_STATE_READY)
+	if (HAL_UART_GetState(TRANSMIT_HUART) == HAL_UART_STATE_READY)
 	{
 		return true;
 	}

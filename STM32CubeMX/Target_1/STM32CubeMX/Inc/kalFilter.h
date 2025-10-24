@@ -1,6 +1,8 @@
+#pragma once
+
 #include "main.h"
 
-struct kals {
+typedef struct kal_Struct {
     float kalGain;
     float vEstimate;
     float vPredict;
@@ -11,8 +13,9 @@ struct kals {
     float r;//measure variance
 
     float p;//process variance
-};
+}Kal;
 
-void kalInit(struct kals *kal,float initV,float initVar,float r,float qAcc);
-void kalPredict(struct kals* kal,float acc);
-void kalUpdate(struct kals *kal,float newV);
+void kalDefaultParams(Kal *kal);
+void kalInit(Kal *kal,float initV,float initVar,float r,float qAcc);
+void kalPredict(Kal *kal,float acc);
+void kalUpdate(Kal *kal,float newV);

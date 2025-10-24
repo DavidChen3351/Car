@@ -60,29 +60,25 @@ UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart1_tx;
 
 /* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
+//osThreadId_t defaultTaskHandle;
+//const osThreadAttr_t defaultTask_attributes = {
+//  .name = "defaultTask",
+//  .stack_size = 128 * 4,
+//  .priority = (osPriority_t) osPriorityNormal,
+//};
 /* USER CODE BEGIN PV */
-osThreadId_t dataProcessHandle;
 osThreadId_t controlTargetHandle;
 osThreadId_t controlHandle;
-osEventFlagsId_t controlFlags;
 
-const osThreadAttr_t dataProcess_attr = {
-  .priority = osPriorityHigh,
-	.stack_size = 128*8,
-};
+osEventFlagsId_t controlTargetFlags;
+
 const osThreadAttr_t controlTarget_attr = {
   .priority = osPriorityHigh,
-	.stack_size = 128*8,
+	.stack_size = 1024,
 };
 const osThreadAttr_t control_attr = {
   .priority = osPriorityHigh,
-	.stack_size = 128*8,
+	.stack_size = 4096,
 };
 
 /* USER CODE END PV */
@@ -147,8 +143,8 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	uartInit();
-	motoInit();
+	//uartInit();
+	//motoInit();
 	timerIni();
 	controlIni();
   /* USER CODE END 2 */
@@ -176,15 +172,13 @@ int main(void)
   /* creation of defaultTask */
   //defaultTaskHandle   = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
   /* USER CODE BEGIN RTOS_THREADS */
-	dataProcessHandle   = osThreadNew(dataProcessTask,NULL,&dataProcess_attr);
-  controlTargetHandle = osThreadNew(controlTargetTask,NULL,&dataProcess_attr);
-  controlHandle       = osThreadNew(controlTask,NULL,&dataProcess_attr);
+  controlTargetHandle = osThreadNew(controlTargetTask,NULL,&controlTarget_attr);
+  controlHandle       = osThreadNew(controlTask,      NULL,&control_attr);
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  //osEventFlagsId_t dataProcessFlags = osEventFlagsNew(NULL);
-  controlFlags = osEventFlagsNew(NULL);
+  controlTargetFlags  = osEventFlagsNew(NULL);
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
@@ -643,6 +637,7 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
+	(void)argument;
   /* Infinite loop */
   for(;;)
   {
