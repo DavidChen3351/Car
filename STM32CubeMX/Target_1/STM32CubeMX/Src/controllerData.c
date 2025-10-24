@@ -9,8 +9,8 @@
 #include"RTE_Components.h"
 #include  CMSIS_device_header
 
-#define CONTROLLER_HUART &huart3
-#define TRANSMIT_HUART &huart1
+#define CONTROLLER_HUART huart3
+#define TRANSMIT_HUART huart1
 
 #define BUFFER_SIZE 50
 #define DMA_BUFFER_SIZE 50
@@ -36,15 +36,17 @@ void RxEventCallback(UART_HandleTypeDef *huart,uint16_t Pos);
 
 uint16_t CH[16];
 
-static uint8_t buffer[BUFFER_SIZE];
-static uint8_t DMAbuffer[DMA_BUFFER_SIZE];
+volatile uint8_t buffer[BUFFER_SIZE];
+volatile uint8_t DMAbuffer[DMA_BUFFER_SIZE];
 static RingBuffer rb;
 
 void controllerDataIni() // need to be called once at the begining
 {
 	//HAL_UART_RegisterCallback(CONTROLLER_HUART, HAL_UART_RX_COMPLETE_CB_ID, UART_Recieve_Complete);//need change
-	HAL_UART_RegisterRxEventCallback(CONTROLLER_HUART,RxEventCallback);
-	RingBufferIni(BUFFER_SIZE,buffer,&rb);
+	HAL_UART_RegisterRxEventCallback(&CONTROLLER_HUART,RxEventCallback);
+	RingBufferIni(BUFFER_SIZE,&buffer,&rb);
+	HAL_UARTEx_ReceiveToIdle_DMA(&CONTROLLER_HUART,&DMAbuffer,DMA_BUFFER_SIZE);
+	__HAL_DMA_DISABLE_IT(CONTROLLER_HUART.hdmarx, DMA_IT_HT);
 }
 
 /*
@@ -53,7 +55,7 @@ void controllerDataIni() // need to be called once at the begining
 void controllerDataProcess()
 {
 	CHprocess();
-	HAL_UARTEx_ReceiveToIdle_DMA(CONTROLLER_HUART,DMAbuffer,DMA_BUFFER_SIZE);
+	//HAL_UARTEx_ReceiveToIdle_DMA(CONTROLLER_HUART,DMAbuffer,DMA_BUFFER_SIZE);
 }
 
 /*
@@ -170,12 +172,12 @@ void CHprocess()
 void sendData(char *pData)
 {
 	uint16_t len = strlen(pData);
-	HAL_UART_Transmit_DMA(TRANSMIT_HUART, (uint8_t *)pData, len);
+	HAL_UART_Transmit_DMA(&TRANSMIT_HUART, (uint8_t *)pData, len);
 }
 
 bool canSendData()
 {
-	if (HAL_UART_GetState(TRANSMIT_HUART) == HAL_UART_STATE_READY)
+	if (HAL_UART_GetState(&TRANSMIT_HUART) == HAL_UART_STATE_READY)
 	{
 		return true;
 	}

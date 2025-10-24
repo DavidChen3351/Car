@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\car.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\car.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6230001: Last Updated: Fri Oct 24 16:10:31 2025
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6230001: Last Updated: Sat Oct 25 00:07:38 2025
 <BR><P>
 <H3>Maximum Stack Usage =        324 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -1611,7 +1611,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_Start_Receive_DMA
 </UL>
-<BR>[Called By]<UL><LI><a href="#[165]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;controllerDataProcess
+<BR>[Called By]<UL><LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;controllerDataIni
 </UL>
 
 <P><STRONG><a name="[7d]"></a>HAL_UARTEx_RxEventCallback</STRONG> (Thumb, 12 bytes, Stack size 8 bytes, stm32f4xx_hal_uart.o(.text.HAL_UARTEx_RxEventCallback))
@@ -1965,7 +1965,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[161]"></a>controlIni</STRONG> (Thumb, 12 bytes, Stack size 8 bytes, control.o(.text.controlIni))
-<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = controlIni &rArr; motoIni &rArr; PID_SetDefaultParam
+<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = controlIni &rArr; controllerDataIni &rArr; HAL_UARTEx_ReceiveToIdle_DMA &rArr; UART_Start_Receive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
 </UL>
 <BR>[Calls]<UL><LI><a href="#[163]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;controllerDataIni
 <LI><a href="#[162]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;motoIni
@@ -1974,7 +1974,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[81]"></a>controlTargetTask</STRONG> (Thumb, 48 bytes, Stack size 16 bytes, control.o(.text.controlTargetTask))
-<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = controlTargetTask &rArr; controllerDataProcess &rArr; HAL_UARTEx_ReceiveToIdle_DMA &rArr; UART_Start_Receive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
+<BR><BR>[Stack]<UL><LI>Max Depth = 80<LI>Call Chain = controlTargetTask &rArr; getTargetFromController &rArr; compute
 </UL>
 <BR>[Calls]<UL><LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getTargetFromController
 <LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osEventFlagsWait
@@ -1996,20 +1996,20 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> main.o(.text.main)
 </UL>
-<P><STRONG><a name="[163]"></a>controllerDataIni</STRONG> (Thumb, 46 bytes, Stack size 8 bytes, controllerdata.o(.text.controllerDataIni))
-<BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = controllerDataIni &rArr; HAL_UART_RegisterRxEventCallback
+<P><STRONG><a name="[163]"></a>controllerDataIni</STRONG> (Thumb, 84 bytes, Stack size 16 bytes, controllerdata.o(.text.controllerDataIni))
+<BR><BR>[Stack]<UL><LI>Max Depth = 160<LI>Call Chain = controllerDataIni &rArr; HAL_UARTEx_ReceiveToIdle_DMA &rArr; UART_Start_Receive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
 </UL>
-<BR>[Calls]<UL><LI><a href="#[16d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RingBufferIni
+<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UARTEx_ReceiveToIdle_DMA
+<LI><a href="#[16d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RingBufferIni
 <LI><a href="#[16c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_RegisterRxEventCallback
 </UL>
 <BR>[Called By]<UL><LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;controlIni
 </UL>
 
-<P><STRONG><a name="[165]"></a>controllerDataProcess</STRONG> (Thumb, 30 bytes, Stack size 8 bytes, controllerdata.o(.text.controllerDataProcess))
-<BR><BR>[Stack]<UL><LI>Max Depth = 152<LI>Call Chain = controllerDataProcess &rArr; HAL_UARTEx_ReceiveToIdle_DMA &rArr; UART_Start_Receive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
+<P><STRONG><a name="[165]"></a>controllerDataProcess</STRONG> (Thumb, 8 bytes, Stack size 8 bytes, controllerdata.o(.text.controllerDataProcess))
+<BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = controllerDataProcess &rArr; CHprocess &rArr; RingBuffer_AddReadIndex
 </UL>
-<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UARTEx_ReceiveToIdle_DMA
-<LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CHprocess
+<BR>[Calls]<UL><LI><a href="#[101]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CHprocess
 </UL>
 <BR>[Called By]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;controlTargetTask
 </UL>
