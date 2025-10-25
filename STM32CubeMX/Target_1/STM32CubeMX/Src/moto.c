@@ -4,7 +4,7 @@
 #include "kalFilter.h"
 #include <stdbool.h>
 
-#define MOTO_DISABLE_INPUT 1
+#define MOTO_DISABLE_INPUT 0
 
 #define LeftMotoCounter htim2
 #define RightMotoCounter htim9

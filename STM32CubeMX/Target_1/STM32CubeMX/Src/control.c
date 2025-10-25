@@ -79,7 +79,10 @@ void controlTask(void * para)
 		
 		if(canSendData())
 		{
-			sprintf(data,"%2.8f,%2.8f,%2.8f\n",consolePidOut,consoleTarget,consoleSpeed);
+			consolePidOut = moto->motoPID.PID_Output;
+			consoleTarget = controlTarget.targetPer[0];
+			consoleSpeed = moto->motoSpeed.currentSpeed;
+			sprintf(data,"%2.8f,%2.8f,%2.8f\n",consolePidOut,consoleTarget,consoleSpeed);/////
 			sendData(data);
 		}
 		
