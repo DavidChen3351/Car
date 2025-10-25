@@ -6,6 +6,7 @@
 *for example: uint8_t buffer[100]; size = 100-1; 
 *@para bufferArray the array build by user 
 *@para rb contains RingBufferInformation
+*@para size: the max index of ringbuffer PLUS one
 */
 void RingBufferIni(uint8_t size,uint8_t* bufferArray,RingBuffer* rb)
 {
@@ -61,6 +62,6 @@ inline uint8_t RingBuffer_GetLength(RingBuffer* rb)
 */
 inline uint8_t RingBuffer_GetRemain(RingBuffer* rb)
 {
-    return rb->size - RingBuffer_GetLength(rb) ;
+    return rb->size - RingBuffer_GetLength(rb) -1;
 }
 

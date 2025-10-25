@@ -12,3 +12,4 @@ typedef struct GPIO_Struct{
 //void Encoder_Init(uint8_t encoderID,void* encoderOverFlowCB(TIM_HandleTypeDef *htim));
 void GPIO_SetMoto(GPIO_motoHandle* handle,float target);
 uint16_t GPIO_GetMotoCounter(GPIO_motoHandle* handle);
+void GPIO_MotoInit(GPIO_motoHandle* handle);

@@ -1,0 +1,35 @@
+./objects/rtx_evflags.o: \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Source\rtx_evflags.c \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Source\rtx_lib.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Include\rtx_def.h \
+  RTE\_Target_1\RTE_Components.h RTE\CMSIS\RTX_Config.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Source\rtx_core_c.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f407xx.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.2.0\CMSIS\Core\Include\core_cm4.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\stm32f4xx_hal_conf.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_def.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc_ex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_gpio_ex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_exti.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma_ex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cortex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ramfunc.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_pwr_ex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Source\rtx_core_cm.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.2.0\CMSIS\RTOS2\Include\os_tick.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.2.0\CMSIS\RTOS2\Include\cmsis_os2.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Include\rtx_os.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Include\rtx_evr.h

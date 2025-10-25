@@ -51,3 +51,12 @@ uint16_t inline GPIO_GetMotoCounter(GPIO_motoHandle* handle)
 {
     return __HAL_TIM_GetCounter(handle->motoEncoder_htim);
 }
+
+void GPIO_MotoInit(GPIO_motoHandle* handle)
+{
+    HAL_TIM_PWM_Start(handle->motoInput_htim, handle->motoInputForCH);
+    HAL_TIM_PWM_Start(handle->motoInput_htim, handle->motoInputBackCH);
+
+	HAL_TIM_Encoder_Start(handle->motoEncoder_htim, TIM_CHANNEL_ALL); 
+	__HAL_TIM_SET_COUNTER(handle->motoEncoder_htim, 0);
+}

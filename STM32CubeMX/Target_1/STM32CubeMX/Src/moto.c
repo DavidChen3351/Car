@@ -4,6 +4,8 @@
 #include "kalFilter.h"
 #include <stdbool.h>
 
+#define MOTO_DISABLE_INPUT 1
+
 #define LeftMotoCounter htim2
 #define RightMotoCounter htim9
 
@@ -31,7 +33,7 @@ extern TIM_HandleTypeDef htim4;
 
 int32_t speedCalRawDiff(uint16_t current, uint16_t prev);
 
-static motoHandle motoArray[MOTO_NUM];
+motoHandle motoArray[MOTO_NUM];
 //void encoderOverFlowCB(TIM_HandleTypeDef *htim);
 //void encoderCB_Ini(uint8_t motoIndex,TIM_HandleTypeDef *htim);
 
@@ -99,6 +101,7 @@ void motoIni()
 			}
 			break;
 		}
+		GPIO_MotoInit(&(motoPtr->motoGPIO));
 		//speed ini
 		motoPtr->motoSpeed.accumCal        = 0;
 		motoPtr->motoSpeed.previousCounter = GPIO_GetMotoCounter(&(motoPtr->motoGPIO));
@@ -198,8 +201,10 @@ void motoControl(target* t)
 
 		speedCal(moto);
 		PID_SetValue(&(moto->motoPID),moto->motoSpeed.currentSpeed);
-	
+		
+		#if MOTO_DISABLE_INPUT == 0
 		GPIO_SetMoto(&(moto->motoGPIO),PID_Cal(&(moto->motoPID)));
+		#endif
 	}
 }
 

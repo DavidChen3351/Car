@@ -18,10 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os2.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include"cmsis_os2.h"
 #include"RTE_Components.h"
 #include  CMSIS_device_header
 
@@ -58,14 +58,15 @@ TIM_HandleTypeDef htim9;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart1_tx;
+DMA_HandleTypeDef hdma_usart3_rx;
 
 /* Definitions for defaultTask */
-//osThreadId_t defaultTaskHandle;
-//const osThreadAttr_t defaultTask_attributes = {
-//  .name = "defaultTask",
-//  .stack_size = 128 * 4,
-//  .priority = (osPriority_t) osPriorityNormal,
-//};
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE BEGIN PV */
 osThreadId_t controlTargetHandle;
 osThreadId_t controlHandle;
@@ -74,11 +75,11 @@ osEventFlagsId_t controlTargetFlags;
 
 const osThreadAttr_t controlTarget_attr = {
   .priority = osPriorityHigh,
-	.stack_size = 1024,
+	.stack_size = 4096,
 };
 const osThreadAttr_t control_attr = {
   .priority = osPriorityHigh,
-	.stack_size = 4096,
+	.stack_size = 8192,
 };
 
 /* USER CODE END PV */
@@ -143,8 +144,6 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	//uartInit();
-	//motoInit();
 	timerIni();
 	controlIni();
   /* USER CODE END 2 */
@@ -170,7 +169,8 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  //defaultTaskHandle   = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  //defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   controlTargetHandle = osThreadNew(controlTargetTask,NULL,&controlTarget_attr);
   controlHandle       = osThreadNew(controlTask,      NULL,&control_attr);
@@ -591,8 +591,12 @@ static void MX_DMA_Init(void)
 
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Stream1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
   /* DMA2_Stream7_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);

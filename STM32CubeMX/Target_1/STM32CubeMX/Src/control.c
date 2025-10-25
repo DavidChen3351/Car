@@ -35,13 +35,17 @@ enum computeMode
 	minus
 };
 
-static char data[100];
-
 target controlTarget;
 extern osEventFlagsId_t controlTargetFlags;
 
 float compute(float a, float b, float *result, enum computeMode mode);
 void getTargetFromController(target* controlTarget);
+
+float	consolePidOut;
+float	consoleTarget; 
+float	consoleSpeed ;
+motoHandle *moto;
+char data[100];
 
 //void controlFlagReady()
 //{
@@ -57,7 +61,7 @@ void controlIni()
 void controlTargetTask(void *para)
 {
 	(void)para;
-	while(true)
+	for(;;)
 	{
 		osEventFlagsWait(controlTargetFlags,controllerDataIdle,osFlagsWaitAny, osWaitForever);
 		controllerDataProcess();
@@ -68,24 +72,17 @@ void controlTargetTask(void *para)
 void controlTask(void * para)
 {
 	(void)para;
-	float	consolePidOut;
-	float	consoleTarget; 
-	float	consoleSpeed ;
-	
-	while(true)
+	moto = getMotoStruct(0);
+	for(;;)
 	{
 		motoControl(&controlTarget);
-
-		motoHandle *moto = getMotoStruct(0);
 		
-		consolePidOut = moto->motoPID.PID_Output;
-		consoleTarget = moto->motoPID.target;
-		consoleSpeed = moto->motoSpeed.currentSpeed;
 		if(canSendData())
 		{
 			sprintf(data,"%2.8f,%2.8f,%2.8f\n",consolePidOut,consoleTarget,consoleSpeed);
 			sendData(data);
 		}
+		
 		osDelay(10);
 	}
 }
