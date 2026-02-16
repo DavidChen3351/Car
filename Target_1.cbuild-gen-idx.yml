@@ -4,10 +4,10 @@ build-gen-idx:
     - board: 
       device: STM32F407VETx
       id: CubeMX
-      output: C:/Users/david/Desktop/New Folder (2)/STM32CubeMX/Target_1/
+      output: C:/Users/david/Desktop/Car/STM32CubeMX/Target_1/
       project-type: single-core
       cbuild-gens:
-        - cbuild-gen: C:/Users/david/Desktop/New Folder (2)/car.Target_1.cbuild-gen.yml
+        - cbuild-gen: C:/Users/david/Desktop/Car/car.Target_1.cbuild-gen.yml
           configuration: .Target_1
-          name: C:/Users/david/Desktop/New Folder (2)/STM32CubeMX/Target_1/car.cgen.yml
+          name: C:/Users/david/Desktop/Car/STM32CubeMX/Target_1/car.cgen.yml
           project: car

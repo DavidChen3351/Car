@@ -6,7 +6,7 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_def.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f407xx.h \
-  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.2.0\CMSIS\Core\Include\core_cm4.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\Core\Include\core_cm4.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_rcc_ex.h \
@@ -16,6 +16,7 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_dma_ex.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_cortex.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_eth.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ex.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_flash_ramfunc.h \
@@ -26,5 +27,8 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\PID.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\moto.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\motoConfig.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\pos.h \
+  STM32CubeMX\Target_1\STM32CubeMX\Inc\speedCal.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\kalFilter.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\GPIO.h
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\cmsis_os2.h

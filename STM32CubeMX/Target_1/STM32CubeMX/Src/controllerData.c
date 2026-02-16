@@ -1,16 +1,13 @@
 #include "main.h"
 #include "controllerData.h"
-#include "stdbool.h"
-#include "string.h"
-#include "control.h"
 #include "RingBuffer.h"
+#include "uart.h"
+#include "moto.h"
 
 #include "cmsis_os2.h"
-#include "RTE_Components.h"
-#include CMSIS_device_header
 
-#define CONTROLLER_HUART huart3
-#define TRANSMIT_HUART huart1
+#include <stdbool.h>
+#include <string.h>
 
 #define BUFFER_SIZE 50
 #define DMA_BUFFER_SIZE 55
@@ -18,15 +15,33 @@
 #define BYTE_LENGTH (uint8_t)8	   // a byte is 8 bit
 #define FRAME_LENGTH (uint8_t)25   // number of bytes a frame contains
 #define FRAME_TOTAL_CH (uint8_t)16 // total channels of a frame
-#define CH_LENGTH (uint8_t)11	   // bit length of a channel
-#define FRAME_START (uint8_t)0x0f  // start byte of frame
-#define FRAME_END (uint8_t)0x00	   // end byte of frame
+#define CH_LENGTH (uint8_t)11	   // each channel contains 11 bits
+#define FRAME_START_BYTE (uint8_t)0x0f  // first byte in frame in hex
+#define FRAME_END_BYTE   (uint8_t)0x00	// last byte in frame in hex
 
-extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart3;
+#define FORWARD_CH (uint8_t)2 // index of forward channel
+#define TURN_CH (uint8_t)0   // index of turn channel
+#define CONTROL_MODE_CH (uint8_t)6 // index of control mode channel
+#define CONTROLLER_CONTROL_MODE_ONE_SIDE_TURN 1 //only one side motor turn,when not forward
+#define CONTROLLER_CONTROL_MODE_DIFFERENTIAL_TURN 0 //differential turn,when not forward,no XY movement
 
-extern osThreadId_t dataProcessHandle;
-extern osEventFlagsId_t controlTargetFlags;
+#define MAX_COUNTER_SPEED 6
+#define MAX_CONTROL_PER 1.0f
+#define MIN_CONTROL_PER -1.0f
+
+enum computeMode 
+{
+	add = 0,
+	minus
+};
+
+
+void receiverProcess(RingBuffer* rb,uint16_t* CH);
+void controllerHandle(uint16_t* CH,controlTarget* t);
+void RxEventCallback(UART_HandleTypeDef *huart, uint16_t Pos);
+void controllerDataProcessTask();
+float compute(float a, float b, float *result, enum computeMode mode);
+int16_t getCH_Shift(uint16_t *CH,uint8_t CH_Index);
 
 const int16_t MIDDLE = 992;
 const uint16_t CH_Total = 800;
@@ -36,52 +51,38 @@ uint8_t buffer[BUFFER_SIZE];
 uint8_t DMAbuffer[DMA_BUFFER_SIZE];
 RingBuffer rb;
 
-void CHprocess();
-void RxEventCallback(UART_HandleTypeDef *huart, uint16_t Pos);
-void RxCompleteCallback(UART_HandleTypeDef *huart);
-void RxErrorCallBack(UART_HandleTypeDef *huart);
+const osThreadAttr_t control_attr = {
+	.priority = osPriorityHigh,
+	.stack_size = 8192,
+};
+osThreadId_t dataProcessHandle;
+osMessageQueueId_t controlTargetQueue;
+osEventFlagsId_t controlTargetFlags;
 
-void controllerDataIni() // need to be called once at the begining
+void controllerDataIni(osMessageQueueId_t queue) // need to be called once at the begining
 {
 	RingBufferIni(BUFFER_SIZE, &buffer[0], &rb);
-	// HAL_UART_RegisterCallback(CONTROLLER_HUART, HAL_UART_RX_COMPLETE_CB_ID, UART_Recieve_Complete);//need change
-	HAL_UART_RegisterRxEventCallback(&CONTROLLER_HUART, RxEventCallback);
-	HAL_UART_RegisterCallback(&CONTROLLER_HUART, HAL_UART_RX_COMPLETE_CB_ID, RxCompleteCallback);
-	HAL_UART_RegisterCallback(&CONTROLLER_HUART, HAL_UART_ERROR_CB_ID,RxErrorCallBack);
 	
-	HAL_UARTEx_ReceiveToIdle_DMA(&CONTROLLER_HUART, &DMAbuffer[0], DMA_BUFFER_SIZE);
-	__HAL_DMA_DISABLE_IT(CONTROLLER_HUART.hdmarx, DMA_IT_HT);
+	uartIni(RxEventCallback, DMAbuffer, DMA_BUFFER_SIZE);
+
+	controlTargetQueue = queue;
+	controlTargetFlags = osEventFlagsNew(NULL);
+	dataProcessHandle = osThreadNew(controllerDataProcessTask, NULL, &control_attr);
 }
 
 /*
- *the process of handle data from controller
+ *the thread of handle data from controller
  */
-void controllerDataProcess()
+void controllerDataProcessTask()
 {
-	CHprocess();
-	// HAL_UARTEx_ReceiveToIdle_DMA(CONTROLLER_HUART,DMAbuffer,DMA_BUFFER_SIZE);
-}
-
-/*
-*error call back
-*/
-void RxErrorCallBack(UART_HandleTypeDef *huart)
-{
-	if (huart == &CONTROLLER_HUART)
+	controlTarget target;
+	for(;;)
 	{
-		RxEventCallback(huart, DMA_BUFFER_SIZE);
-	}
-}
-
-/*
-*dma is full 
-*/
-void RxCompleteCallback(UART_HandleTypeDef *huart)
-{
-	if (huart == &CONTROLLER_HUART)
-	{
-		RxEventCallback(huart, DMA_BUFFER_SIZE);
-	}
+		osEventFlagsWait(controlTargetFlags,ringBufferReady,osFlagsWaitAny, osWaitForever);
+		receiverProcess(&rb, &CH[0]);
+		controllerHandle(&CH[0], &target);
+		osMessageQueuePut(controlTargetQueue,&target,0,0);
+	}	
 }
 
 /*
@@ -96,18 +97,14 @@ void RxEventCallback(UART_HandleTypeDef *huart, uint16_t Pos)
 	{
 		RingBuffer_Write(&rb, DMAbuffer[i]);
 	}
-
-	// restart uart receving
-	HAL_UARTEx_ReceiveToIdle_DMA(&CONTROLLER_HUART, &DMAbuffer[0], DMA_BUFFER_SIZE);
-
 	// tell program RingBuffer should be handlled
-	osEventFlagsSet(controlTargetFlags, controllerDataIdle);
+	osEventFlagsSet(controlTargetFlags, ringBufferReady);
 }
 
 /*
  *return the shift value of a channel
  */
-inline int16_t getCH_Shift(uint8_t CH_Index)
+inline int16_t getCH_Shift(uint16_t *CH,uint8_t CH_Index)
 {
 	if (CH_Index >= 0 && CH_Index <= 15)
 	{
@@ -122,9 +119,9 @@ inline int16_t getCH_Shift(uint8_t CH_Index)
 /*
  *return the percentage value of a channel
  */
-float getCH_Per(uint8_t CH_Index)
+float getCH_Per(uint16_t* CH,uint8_t CH_Index)
 {
-	return (float)getCH_Shift(CH_Index) / (float)CH_Total;
+	return (float)getCH_Shift(CH,CH_Index) / (float)CH_Total;
 }
 
 /*
@@ -132,16 +129,16 @@ float getCH_Per(uint8_t CH_Index)
  *fun should be called when idle event callback is triggered AND
  *callback fun has moved data from DMA buffer to RingBuffer
  */
-void CHprocess()
+void receiverProcess(RingBuffer* rb,uint16_t* CH)
 {
-	uint8_t length = RingBuffer_GetLength(&rb);
-	if (length > FRAME_LENGTH)
+	uint8_t length = RingBuffer_GetLength(rb);
+	if (length >= FRAME_LENGTH)
 	{
 		for (int i = 0; i < length - FRAME_LENGTH + 1; i++)
 		{
 			// validate frame start and frame end
-			if (RingBuffer_Read(&rb, 0) == FRAME_START &&
-				RingBuffer_Read(&rb, FRAME_LENGTH - 1) == FRAME_END)
+			if (RingBuffer_Read(rb, 0) == FRAME_START_BYTE &&
+				RingBuffer_Read(rb, FRAME_LENGTH - 1) == FRAME_END_BYTE)
 			{
 				// compute frame data into Channel data
 				uint8_t taken = 0;
@@ -163,19 +160,19 @@ void CHprocess()
 						uint16_t middleTake;
 						rightTakeNUM -= BYTE_LENGTH;
 
-						leftTake = (uint16_t)RingBuffer_Read(&rb, bufferIndex) >> (BYTE_LENGTH - leftTakeNUM);
+						leftTake = (uint16_t)RingBuffer_Read(rb, bufferIndex) >> (BYTE_LENGTH - leftTakeNUM);
 						bufferIndex++;
-						middleTake = (uint16_t)RingBuffer_Read(&rb, bufferIndex) << (leftTakeNUM);
+						middleTake = (uint16_t)RingBuffer_Read(rb, bufferIndex) << (leftTakeNUM);
 						bufferIndex++;
-						rightTake = (uint16_t)RingBuffer_Read(&rb, bufferIndex) << (leftTakeNUM + BYTE_LENGTH);
+						rightTake = (uint16_t)RingBuffer_Read(rb, bufferIndex) << (leftTakeNUM + BYTE_LENGTH);
 
 						CH[CH_Index] = (leftTake | middleTake | rightTake)& 0x7ff;
 					}
 					else
 					{
-						leftTake = (uint16_t)RingBuffer_Read(&rb, bufferIndex) >> (BYTE_LENGTH - leftTakeNUM);
+						leftTake = (uint16_t)RingBuffer_Read(rb, bufferIndex) >> (BYTE_LENGTH - leftTakeNUM);
 						bufferIndex++;
-						rightTake = (uint16_t)RingBuffer_Read(&rb, bufferIndex) << leftTakeNUM;
+						rightTake = (uint16_t)RingBuffer_Read(rb, bufferIndex) << leftTakeNUM;
 						
 						CH[CH_Index] = (leftTake | rightTake )& 0x7ff ;
 					}
@@ -184,12 +181,12 @@ void CHprocess()
 					CH_Index++;
 				}
 				//move read index of RingBuffer
-				RingBuffer_AddReadIndex(&rb, FRAME_LENGTH);
+				RingBuffer_AddReadIndex(rb, FRAME_LENGTH);
 				return;
 			}
 			else
 			{ // if not validate,RingBuffer add read index
-				RingBuffer_AddReadIndex(&rb, 0x01);
+				RingBuffer_AddReadIndex(rb, 0x01);
 			}
 		}
 	}
@@ -197,20 +194,77 @@ void CHprocess()
 	return;
 }
 
-void sendData(char *pData)
+/*
+*a fun used to help compute left and right moto target percentage
+*/
+inline float compute(float a, float b, float *result, enum computeMode mode)
 {
-	uint16_t len = strlen(pData);
-	HAL_UART_Transmit_DMA(&TRANSMIT_HUART, (uint8_t *)pData, len);
-}
-
-bool canSendData()
-{
-	if (HAL_UART_GetState(&TRANSMIT_HUART) == HAL_UART_STATE_READY)
+	if (mode == add)
 	{
-		return true;
+		*result = a + b;
 	}
 	else
 	{
-		return false;
+		*result = a - b;
 	}
+
+	float overFlow;
+	if (*result > MAX_CONTROL_PER)
+	{
+		overFlow = *result - MAX_CONTROL_PER;
+		*result = MAX_CONTROL_PER;
+		return overFlow;
+	}
+	else if (*result < MIN_CONTROL_PER)
+	{
+		overFlow = *result - MIN_CONTROL_PER;
+		*result = MIN_CONTROL_PER;
+		return overFlow;
+	}
+	return 0.0f;
+}
+
+/*
+*ths fun get control target from controller data
+*/
+void controllerHandle(uint16_t* CH,controlTarget* t)
+{
+	float CH_forwardPer = getCH_Per(CH,FORWARD_CH);
+	float CH_turnPer = getCH_Per(CH,TURN_CH);
+	bool controlMode = getCH_Shift(CH,CONTROL_MODE_CH) == CONTROLLER_CONTROL_MODE_ONE_SIDE_TURN ? 
+	CONTROLLER_CONTROL_MODE_ONE_SIDE_TURN : CONTROLLER_CONTROL_MODE_DIFFERENTIAL_TURN;
+	float leftPer;
+	float rightPer;
+
+	if (controlMode == CONTROLLER_CONTROL_MODE_DIFFERENTIAL_TURN)
+	{
+		if (CH_forwardPer != 0)
+		{
+			if (CH_turnPer > 0)
+			{
+				leftPer = CH_forwardPer;
+				rightPer = CH_forwardPer * (MAX_CONTROL_PER - CH_turnPer);
+			}
+			else
+			{
+				CH_turnPer = -CH_turnPer;
+				leftPer = (MAX_CONTROL_PER - CH_turnPer) * CH_forwardPer;
+				rightPer = CH_forwardPer;
+			}
+		}
+		else
+		{
+			leftPer = CH_turnPer;
+			rightPer = -CH_turnPer;
+		}
+	}
+	else
+	{
+		float leftOverFlow = compute(CH_forwardPer, CH_turnPer, &leftPer, add);
+		float rightOverFlow = compute(CH_forwardPer, CH_turnPer, &rightPer, minus);
+		leftPer -= rightOverFlow;
+		rightPer -= leftOverFlow;
+	}
+	t->targetPer[0] = leftPer;
+	t->targetPer[1] = rightPer;
 }

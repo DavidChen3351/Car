@@ -4,9 +4,9 @@
 #include <stdbool.h>
 #include "moto.h"
 
-#define DEFAULT_Kp 0.1f
-#define DEFAULT_Ki 0.1f
-#define DEFAULT_Kd 0.1f
+#define DEFAULT_Kp 0.01f
+#define DEFAULT_Ki 0.01f
+#define DEFAULT_Kd 0.01f
 #define DEFAULT_I_Size 0.5f
 #define DEFAULT_PID_SIZE 1.0f
 
@@ -56,7 +56,7 @@ inline void PID_SetTarget(PID *pid,float target)
 }
 
 /*
-*set the current value of PID
+*set the current wanted control value for PID calculation
 */
 inline void PID_SetValue(PID *pid,float currentValue)
 {

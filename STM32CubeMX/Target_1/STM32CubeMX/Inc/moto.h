@@ -1,37 +1,23 @@
 #pragma once
 
-#include "main.h"
-#include "stdbool.h"
-#include "kalFilter.h"
-#include "GPIO.h"
+#include "motoConfig.h"
+
 #include "PID.h"
+#include "pos.h"
+#include "speedCal.h"
 
-#define MOTO_NUM 2
+#include <stdbool.h>
+#include "cmsis_os2.h"
 
-typedef uint8_t motoIndex;
+typedef struct {
+	float targetPer[MOTO_NUM];
+}controlTarget;
 
-typedef struct speedStruct{
-	uint16_t  accumCal ;
-	uint16_t  previousCounter;
-
-	float     currentSpeed;          
-	float     currentAcc;
-	float     lastSpeed;
-
-	Kal kal;
-}speed;
-
-typedef struct motoStruct{
-	GPIO_motoHandle motoGPIO;
-	speed motoSpeed;
-	PID motoPID;
+typedef struct {
+	speedStruct motoSpeed[MOTO_NUM];
+	PID motoPID[MOTO_NUM];
+	pos position;
 }motoHandle;
 
-typedef struct targetStruct{
-	float targetPer[MOTO_NUM];
-}target;
-
-void motoIni();
-void speedCal(motoHandle* moto);
-void motoControl(target* t);
-motoHandle *getMotoStruct(motoIndex index);
+void motoIni(osThreadId_t queue);
+motoHandle* motoReturnHandle();

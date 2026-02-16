@@ -1,5 +1,6 @@
 #include "main.h"
 #include "RingBuffer.h"
+#include <string.h>
 
 /*
 *@para size size should be byte length of buffer minus one
@@ -26,6 +27,18 @@ inline void RingBuffer_Write(RingBuffer* rb,uint8_t data)
     rb->buf[rb->write] = data;
     rb->write++;
     rb->write = rb->write % rb->size;
+}
+
+inline void RingBuffer_WriteBytes(RingBuffer* rb,uint8_t* data,uint8_t length)
+{
+    if(rb->write + length <= rb->size)
+        memcpy(rb->buf + rb->write, data, length);
+    else
+    {
+        memcpy(rb->buf + rb->write, data, rb->size - rb->write);
+        memcpy(rb->buf, data + (rb->size - rb->write), length - (rb->size - rb->write));
+    }
+    rb->write = (rb->write + length) % rb->size;
 }
 
 /*

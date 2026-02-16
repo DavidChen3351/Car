@@ -13,9 +13,22 @@
 #define RTE_CMSIS_RTOS2                 /* CMSIS-RTOS2 */
 #define RTE_CMSIS_RTOS2_RTX5            /* CMSIS-RTOS2 Keil RTX5 */
 #define RTE_CMSIS_RTOS2_RTX5_SOURCE     /* CMSIS-RTOS2 Keil RTX5 Source */
+/* Keil::CMSIS Driver:Ethernet MAC@3.2.0 */
+#define RTE_Drivers_ETH_MAC0            /* Driver ETH_MAC0 */
+/* Keil::CMSIS Driver:Ethernet PHY:DP83848C@6.2.0 */
+#define RTE_Drivers_PHY_DP83848C        /* Driver PHY DP83848C */
 /* Keil::Device:CubeMX@1.0.0 */
 #define RTE_DEVICE_CUBE_MX
 #define CMSIS_device_header "stm32f4xx.h"
+/* Keil::Network&MDK:CORE@8.2.0 */
+#define RTE_Network_Core                /* Network Core */
+/* Keil::Network&MDK:Interface:ETH@8.2.0 */
+#define RTE_Network_Interface_ETH_0     /* Network Interface ETH 0 */
+
+/* Keil::Network&MDK:Socket:TCP@8.2.0 */
+#define RTE_Network_Socket_TCP          /* Network Socket TCP */
+/* Keil::Network&MDK:Socket:UDP@8.2.0 */
+#define RTE_Network_Socket_UDP          /* Network Socket UDP */
 
 
 #endif /* RTE_COMPONENTS_H */
