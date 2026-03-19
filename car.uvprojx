@@ -315,7 +315,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>3</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -341,7 +341,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>.\ProjectFile;.\ProjectFile\Algorithm;.\ProjectFile\Controller;.\ProjectFile\MotionControl;.\ProjectFile\Peripherals;.\ProjectFile\Protocol;.\ProjectFile\Storage</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -386,69 +386,104 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>moto.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\moto.c</FilePath>
-            </File>
-            <File>
-              <FileName>PID.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\PID.c</FilePath>
-            </File>
-            <File>
-              <FileName>controllerData.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\controllerData.c</FilePath>
-            </File>
-            <File>
-              <FileName>kalFilter.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\kalFilter.c</FilePath>
-            </File>
-            <File>
-              <FileName>RingBuffer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\RingBuffer.c</FilePath>
-            </File>
-            <File>
-              <FileName>Timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\Timer.c</FilePath>
-            </File>
-            <File>
-              <FileName>speedCal.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\speedCal.c</FilePath>
-            </File>
-            <File>
-              <FileName>pos.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\pos.c</FilePath>
-            </File>
-            <File>
               <FileName>MsgQueue.c</FileName>
               <FileType>5</FileType>
               <FilePath>.\MsgQueue.c</FilePath>
             </File>
             <File>
-              <FileName>uart.c</FileName>
+              <FileName>kalFilter.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\uart.c</FilePath>
+              <FilePath>.\ProjectFile\Algorithm\kalFilter.c</FilePath>
             </File>
             <File>
-              <FileName>UDP.c</FileName>
+              <FileName>PID.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\UDP.c</FilePath>
+              <FilePath>.\ProjectFile\Algorithm\PID.c</FilePath>
             </File>
             <File>
-              <FileName>system.c</FileName>
+              <FileName>pos.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\system.c</FilePath>
+              <FilePath>.\ProjectFile\Algorithm\pos.c</FilePath>
+            </File>
+            <File>
+              <FileName>HT-8A.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Controller\HT-8A.c</FilePath>
+            </File>
+            <File>
+              <FileName>differentialTurn.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\MotionControl\differentialTurn.c</FilePath>
+            </File>
+            <File>
+              <FileName>motionControl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\MotionControl\motionControl.c</FilePath>
+            </File>
+            <File>
+              <FileName>oneSideTurn.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\MotionControl\oneSideTurn.c</FilePath>
+            </File>
+            <File>
+              <FileName>SBUS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Protocol\SBUS.c</FilePath>
+            </File>
+            <File>
+              <FileName>moto.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\moto.c</FilePath>
+            </File>
+            <File>
+              <FileName>receiver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\receiver.c</FilePath>
             </File>
             <File>
               <FileName>ros.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\ros.c</FilePath>
+              <FilePath>.\ProjectFile\ros.c</FilePath>
+            </File>
+            <File>
+              <FileName>speedCal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\speedCal.c</FilePath>
+            </File>
+            <File>
+              <FileName>system.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\system.c</FilePath>
+            </File>
+            <File>
+              <FileName>RingBuffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Storage\RingBuffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Peripherals\Timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Peripherals\uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>UDP.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Peripherals\UDP.c</FilePath>
+            </File>
+            <File>
+              <FileName>VOFA_JustFloat.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Protocol\VOFA_JustFloat.c</FilePath>
+            </File>
+            <File>
+              <FileName>Debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Debug.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -584,6 +619,9 @@
           <GroupName>::CMSIS Driver</GroupName>
         </Group>
         <Group>
+          <GroupName>::CMSIS-View</GroupName>
+        </Group>
+        <Group>
           <GroupName>::Device</GroupName>
         </Group>
         <Group>
@@ -632,6 +670,12 @@
       </api>
     </apis>
     <components>
+      <component Cclass="CMSIS-View" Cgroup="Event Recorder" Cvariant="DAP" Cvendor="ARM" Cversion="1.6.0" condition="EventRecorder">
+        <package name="CMSIS-View" schemaVersion="1.7.36" url="https://www.keil.com/pack/" vendor="ARM" version="1.2.0"/>
+        <targetInfos>
+          <targetInfo name="Target_1"/>
+        </targetInfos>
+      </component>
       <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="6.2.0" condition="ARMv6_7_8-M Device">
         <package name="CMSIS" schemaVersion="1.7.53" url="https://www.keil.com/pack/" vendor="ARM" version="6.3.0"/>
         <targetInfos>
@@ -698,6 +742,14 @@
       </component>
     </components>
     <files>
+      <file attr="config" category="header" name="EventRecorder\Config\EventRecorderConf.h" version="1.1.0">
+        <instance index="0">RTE\CMSIS-View\EventRecorderConf.h</instance>
+        <component Cclass="CMSIS-View" Cgroup="Event Recorder" Cvariant="DAP" Cvendor="ARM" Cversion="1.6.0" condition="EventRecorder"/>
+        <package name="CMSIS-View" schemaVersion="1.7.36" url="https://www.keil.com/pack/" vendor="ARM" version="1.2.0"/>
+        <targetInfos>
+          <targetInfo name="Target_1"/>
+        </targetInfos>
+      </file>
       <file attr="config" category="source" name="Config\RTX_Config.c" version="5.2.0">
         <instance index="0">RTE\CMSIS\RTX_Config.c</instance>
         <component Capiversion="2.3.0" Cclass="CMSIS" Cgroup="RTOS2" Csub="Keil RTX5" Cvariant="Source" Cvendor="ARM" Cversion="5.9.0" condition="RTX5"/>

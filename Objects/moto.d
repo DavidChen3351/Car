@@ -1,6 +1,5 @@
-./objects/moto.o: STM32CubeMX\Target_1\STM32CubeMX\Src\moto.c \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\moto.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\motoConfig.h \
+./objects/moto.o: ProjectFile\moto.c ProjectFile\moto.h \
+  ProjectFile\motoConfig.h ProjectFile\Algorithm\PID.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\main.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\stm32f4xx_hal_conf.h \
@@ -27,9 +26,7 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\PID.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\pos.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\speedCal.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\kalFilter.h \
+  ProjectFile\Algorithm\pos.h ProjectFile\speedCal.h \
+  ProjectFile\Algorithm\kalFilter.h \
   C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\cmsis_os2.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\Timer.h
+  ProjectFile\Peripherals\Timer.h

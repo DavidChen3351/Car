@@ -1,6 +1,11 @@
-./objects/system.o: STM32CubeMX\Target_1\STM32CubeMX\Src\system.c \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\system.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\controllerData.h \
+./objects/system.o: ProjectFile\system.c \
+  C:\Users\david\AppData\Local\Arm\Packs\Keil\MDK-Middleware\8.2.0\Components\Network\Include\rl_net.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\Core\Include\cmsis_compiler.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\Core\Include\cmsis_armclang.h \
+  RTE\_Target_1\RTE_Components.h ProjectFile\Peripherals\UDP.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\cmsis_os2.h \
+  ProjectFile\system.h ProjectFile\receiver.h ProjectFile\moto.h \
+  ProjectFile\motoConfig.h ProjectFile\Algorithm\PID.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\main.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\stm32f4xx_hal_conf.h \
@@ -27,15 +32,6 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
-  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\cmsis_os2.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\moto.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\motoConfig.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\PID.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\pos.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\speedCal.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\kalFilter.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\ros.h \
-  C:\Users\david\AppData\Local\Arm\Packs\Keil\MDK-Middleware\8.2.0\Components\Network\Include\rl_net.h \
-  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\Core\Include\cmsis_compiler.h \
-  RTE\_Target_1\RTE_Components.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\UDP.h
+  ProjectFile\Algorithm\pos.h ProjectFile\speedCal.h \
+  ProjectFile\Algorithm\kalFilter.h ProjectFile\ros.h \
+  ProjectFile\MotionControl\motionControl.h ProjectFile\Debug.h

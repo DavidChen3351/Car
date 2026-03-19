@@ -33,4 +33,6 @@
   C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\os_tick.h \
   C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\cmsis_os2.h \
   C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Include\rtx_os.h \
-  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Include\rtx_evr.h
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-RTX\5.9.0\Include\rtx_evr.h \
+  C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS-View\1.2.0\EventRecorder\Include\EventRecorder.h \
+  RTE\CMSIS-View\EventRecorderConf.h

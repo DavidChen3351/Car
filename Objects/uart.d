@@ -1,4 +1,4 @@
-./objects/uart.o: STM32CubeMX\Target_1\STM32CubeMX\Src\uart.c \
+./objects/uart.o: ProjectFile\Peripherals\uart.c \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\main.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\stm32f4xx_hal_conf.h \
@@ -25,5 +25,4 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
-  STM32CubeMX\Target_1\STM32CubeMX\Inc\uart.h \
-  RTE\_Target_1\RTE_Components.h
+  ProjectFile\Peripherals\uart.h RTE\_Target_1\RTE_Components.h
