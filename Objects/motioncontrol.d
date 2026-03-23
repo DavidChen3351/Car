@@ -30,5 +30,6 @@
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
   ProjectFile\Algorithm\pos.h ProjectFile\speedCal.h \
-  ProjectFile\Algorithm\kalFilter.h ProjectFile\MotionControl\turn.h \
-  ProjectFile\receiver.h ProjectFile\Controller\HT-8A.h
+  ProjectFile\Algorithm\kalFilter.h \
+  ProjectFile\MotionControl\differentialTurn.h ProjectFile\receiver.h \
+  ProjectFile\Controller\HT-8A.h

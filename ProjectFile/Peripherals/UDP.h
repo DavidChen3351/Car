@@ -1,10 +1,11 @@
 #pragma once
 
 #include "rl_net.h"
+#include <stdbool.h>
 
-typedef void (*UDP_CallBack)(const uint8_t *buf, uint32_t len);
+typedef void (*UDP_UserCallBack)(const uint8_t *buf, uint32_t len);
 void UDP_Ini();
-void UDP_RegisterCB(uint16_t port, UDP_CallBack cb);
-bool UDP_GetBuffer(uint32_t len);
-void UDP_WriteBuffer(uint8_t* ptr,uint32_t len);
-void UDP_SendData ();
+int UDP_GetHandle(uint16_t userPort,UDP_UserCallBack cb);
+bool UDP_GetBuffer(int i, uint32_t len);
+bool UDP_WriteBuffer(int i, uint8_t *ptr, uint32_t len);
+bool UDP_SendData(int i);

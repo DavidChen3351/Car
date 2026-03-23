@@ -6,7 +6,6 @@
 #include "uart.h"
 #include "moto.h"
 #include "SBUS.h"
-#include "receiver.h"
 #include "HT-8A.h"
 
 #define BUFFER_SIZE 50
@@ -18,7 +17,7 @@ const osThreadAttr_t receiverProcess_attr = {
 };
 static osEventFlagsId_t controlTargetFlags;
 static osMessageQueueId_t receiverQueue;
-uint16_t CH[16];
+uint16_t CH[SBUS_RESULT_CH_NUM];
 RingBuffer rb;
 uint8_t buffer[BUFFER_SIZE];
 
@@ -82,13 +81,13 @@ void RxEventCallback(uint8_t *buffPtr, uint16_t len)
 void Receiver_Process(RingBuffer *rb, uint16_t *CH)
 {
 	uint8_t buffLength = RingBuffer_GetLength(rb);
-	while (buffLength >= SBUS_FRAME_LENGTH)
+	while (buffLength >= SBUS_FRAME_BYTE_LENGTH)
 	{
 		// validate frame start and frame end
 		if (SBUS_ValidFrame(rb))
 		{
 			SBUS_Process(rb,CH);
-			RingBuffer_AddReadIndex(rb, SBUS_FRAME_LENGTH);
+			RingBuffer_AddReadIndex(rb, SBUS_FRAME_BYTE_LENGTH);
 			return;
 		}
 		else

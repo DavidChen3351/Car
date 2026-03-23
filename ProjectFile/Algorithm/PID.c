@@ -4,20 +4,22 @@
 #include <stdbool.h>
 #include "moto.h"
 
-#define DEFAULT_Kp 0.01f
-#define DEFAULT_Ki 0.01f
-#define DEFAULT_Kd 0.01f
+#define DEFAULT_Kp 2
+#define DEFAULT_Ki 0.8f
+#define DEFAULT_Kd 0.2
 #define DEFAULT_I_Size 0.5f
 #define DEFAULT_PID_SIZE 1.0f
 
 /*
-*@pram PID *pid store target ,Intergral,current and last value
-*calculate PID
+*@pram PID_Handle *pid store target ,Intergral,current and last value
+*calculate PID_Handle
 *Intergral is limit by I_Size
 *PID_Strength is limit by PID_Size
 */
-void PID_Cal(PID *pid)
+float PID_Cal(PID_Handle *pid,float currentValue)
 {
+	pid->currentValue = currentValue;
+
 	float P_Strength = (pid->target  - pid->currentValue) * (pid->Kp);
 
 	float IntergralGain = (pid->target  - pid->currentValue) * (pid->Ki);
@@ -43,25 +45,18 @@ void PID_Cal(PID *pid)
 	}
 
 	pid->PID_Output = PID_Strength;
+	return PID_Strength;
 }
 
 /*
-*set the target value of PID
+*set the current wanted control value for PID_Handle calculation
 */
-inline void PID_SetTarget(PID *pid,float target)
+inline void PID_SetTarget(PID_Handle *pid,float target)
 {
 	pid->target = target;
 }
 
-/*
-*set the current wanted control value for PID calculation
-*/
-inline void PID_SetValue(PID *pid,float currentValue)
-{
-	pid->currentValue = currentValue;
-}
-
-void PID_SetParam(PID* pid,float Kp,float Ki,float Kd,float I_Size,float PID_Size)
+void PID_SetParam(PID_Handle* pid,float Kp,float Ki,float Kd,float I_Size,float PID_Size)
 {
 	pid->Kp = Kp;
 	pid->Ki = Ki;
@@ -70,7 +65,7 @@ void PID_SetParam(PID* pid,float Kp,float Ki,float Kd,float I_Size,float PID_Siz
 	pid->PID_Size = PID_Size;
 }
 
-void PID_SetDefaultParam(PID* pid)
+void PID_SetDefaultParam(PID_Handle* pid)
 {
 	pid->Kp = DEFAULT_Kp;
 	pid->Ki = DEFAULT_Ki;

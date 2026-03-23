@@ -4,7 +4,8 @@
   C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\Core\Include\cmsis_armclang.h \
   RTE\_Target_1\RTE_Components.h ProjectFile\Peripherals\UDP.h \
   C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\cmsis_os2.h \
-  ProjectFile\system.h ProjectFile\receiver.h ProjectFile\moto.h \
+  ProjectFile\system.h ProjectFile\receiver.h \
+  ProjectFile\Controller\HT-8A.h ProjectFile\moto.h \
   ProjectFile\motoConfig.h ProjectFile\Algorithm\PID.h \
   STM32CubeMX\Target_1\STM32CubeMX\Inc\main.h \
   STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal.h \

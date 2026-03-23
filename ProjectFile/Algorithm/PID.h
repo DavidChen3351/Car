@@ -3,7 +3,7 @@
 #include "main.h"
 
 
-typedef struct PID_Struct{
+typedef struct {
 	float I_Strength;
 	float I_Size;
 	float PID_Size;
@@ -17,11 +17,10 @@ typedef struct PID_Struct{
 	float lastValue;
 
 	float PID_Output;
-}PID;
+}PID_Handle;
 
-void PID_SetParam(PID* pid,float Kp,float Ki,float Kd,float I_Size,float PID_Size);
-void PID_SetDefaultParam(PID* pid);
+void PID_SetParam(PID_Handle* pid,float Kp,float Ki,float Kd,float I_Size,float PID_Size);
+void PID_SetDefaultParam(PID_Handle* pid);
 
-void PID_SetTarget(PID *pid,float target);
-void PID_SetValue(PID *pid,float currentValue);
-void PID_Cal(PID *pid);
+void PID_SetTarget(PID_Handle *pid,float target);
+float PID_Cal(PID_Handle *pid,float currentValue);

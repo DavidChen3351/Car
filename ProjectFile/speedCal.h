@@ -5,19 +5,21 @@
 
 typedef struct
 {
-	float totalDistance; // total distance in meter
 	float currentSpeed; // current speed in m/s	
+	float totalDistance; // total distance in meter
+	float distanceDiff; // distance gain between two calculations in meter
+	Kal kal;
 	//uint16_t currentCounter;
 	//uint16_t previousCounter;
 
 	//float currentSpeed;
 	//float currentAcc;
 	//float lastSpeed;
-	float distanceDiff; // distance gain between two calculations in meter
+	
 	//uint8_t accumCal; // accumulate calculation times, used for reset kalman filter
-	Kal kal;
-	bool validSpeed;
-} speedStruct;
+	
+	//bool validSpeed;
+} speedHandle;
 
-void speedIni(speedStruct *speed);
-void speedCal(speedStruct *speed,float gain,float input);
+void speedIni(speedHandle *speed);
+void speedCal(speedHandle *speed,float gain,float input);

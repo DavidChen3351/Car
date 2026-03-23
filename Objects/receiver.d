@@ -31,4 +31,4 @@
   ProjectFile\motoConfig.h ProjectFile\Algorithm\PID.h \
   ProjectFile\Algorithm\pos.h ProjectFile\speedCal.h \
   ProjectFile\Algorithm\kalFilter.h ProjectFile\Protocol\SBUS.h \
-  ProjectFile\receiver.h ProjectFile\Controller\HT-8A.h
+  ProjectFile\Controller\HT-8A.h

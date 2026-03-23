@@ -25,10 +25,15 @@
 #define BITS_OF_BYTE (uint8_t)8		// a byte is 8 bit
 #define BITS_OF_CHANNEL (uint8_t)11 // each channel contains 11 bits
 
-#define BYTES_OF_FRAME (uint8_t)SBUS_FRAME_LENGTH	   // number of bytes a frame contains
-#define FRAME_TOTAL_CH (uint8_t)16	   // total channels of a frame
+#define BYTES_OF_FRAME (uint8_t)SBUS_FRAME_BYTE_LENGTH	   // number of bytes a frame contains
+#define FRAME_TOTAL_CH (uint8_t)SBUS_TOTAL_CH	   // total channels of a frame
 #define FRAME_START_BYTE (uint8_t)0x0fU // first byte in frame in hex
 #define FRAME_END_BYTE (uint8_t)0x00U   // last byte in frame in hex
+
+#define STATE_BYTE_INDEX (uint8_t)22 //the state byte is the (22 + 1) byte
+#define FRAME_LOST_BIT_MASK 0x4U //second bit of state byte
+#define FAIL_SAFE_BIT_MASK 0x8U	//third bit of state byte
+
 
 inline bool SBUS_ValidFrame(bufferPara)
 {
@@ -45,9 +50,14 @@ inline bool SBUS_ValidFrame(bufferPara)
 inline void SBUS_Process(bufferPara, uint16_t *CH)
 {
 	uint8_t rightPartInBits = 0; // number of bits already computed in current byte,initially is 0
-	uint8_t CH_Index = 0;
+	uint8_t CH_Index;
 	uint8_t bufferIndex = 1; // index 0 is the start frame
-	for (uint8_t i = 0; i < FRAME_TOTAL_CH; i++)
+
+	uint8_t stateByte = bufferReadByte(STATE_BYTE_INDEX);
+	CH[FRAME_LOST_CH_INDEX] = (stateByte & FRAME_LOST_BIT_MASK) == 0x1U ? 0xffU : 0x0U; 
+	CH[FAIL_SAFE_CH_INDEX] = (stateByte & FAIL_SAFE_BIT_MASK) == 0x1U ? 0xffU : 0x0U; 
+
+	for (CH_Index = 0; CH_Index < FRAME_TOTAL_CH; CH_Index++)
 	{
 		uint8_t leftPartInBits;
 
@@ -78,7 +88,6 @@ inline void SBUS_Process(bufferPara, uint16_t *CH)
 
 			CH[CH_Index] = (LeftPart | RightPart) & BIT_MASK;
 		}
-		CH_Index++;
 	}
 	return;
 }

@@ -29,4 +29,4 @@
   ProjectFile\Algorithm\pos.h ProjectFile\speedCal.h \
   ProjectFile\Algorithm\kalFilter.h \
   C:\Users\david\AppData\Local\Arm\Packs\ARM\CMSIS\6.3.0\CMSIS\RTOS2\Include\cmsis_os2.h \
-  ProjectFile\Peripherals\Timer.h
+  ProjectFile\Peripherals\PWM.h ProjectFile\Peripherals\Encoder.h

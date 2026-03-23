@@ -7,15 +7,16 @@
 #define SPEED_CAL_PERIOD MOTO_CONTROL_PERIOD_S //speed calculation period in seconds
 
 /*
+*@para gain moto distance gain in meter
  *calculate speed and acceleration for moto
  */
-inline void speedCal(speedStruct *speed,float gain,float input)
+inline void speedCal(speedHandle *speed,float gain,float input)
 {
-	#if MOTO_DISABLE_KAL == false
+	#if MOTO_USE_KAL == true
 	// kal predict
 	u controlInput = {{input}};
 	z measure = {};
-	R cov = {{0.05f}};
+	R cov = {{0.1f}};
 	kalPredict(&(speed->kal), controlInput);
 
 	// calculate total distance and measurement
@@ -48,13 +49,13 @@ inline void speedCal(speedStruct *speed,float gain,float input)
 
 //when moto drive only gear ,I got speed 0.30 0.67 0.99 at input 0.25 0.5 and 0.75,basicaly linear I guess
 //my initial guess about k is 0.5,well I think it is not far from the true value
-void speedIni(speedStruct *speed)
+void speedIni(speedHandle *speed)
 {
 	speed->totalDistance = 0;
 	speed->currentSpeed = 0;
 	iniX x = {{0},{0}};
 	iniP P = {{0,0},{0,0}};
-	Qv var = 0.1f; 
-	float k = 0.88f;//what a mysterious tiny number
+	Qv var = 0.3f; 
+	float k = 0.88f;//mysterious tiny number
 	kalInit(&(speed->kal),x,P,var,k);
 }

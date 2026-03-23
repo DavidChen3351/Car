@@ -30,6 +30,6 @@ void systemIniTask(void *argument)
 
     UDP_Ini();
     DebugInit();
-    //rosIni();
+    rosIni();
     return;
 }

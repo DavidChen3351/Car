@@ -69,6 +69,14 @@
         {
             "name": "Target_1",
             "includePath": [
+                "c:\\Users\\david\\Desktop\\Car\\ProjectFile",
+                "c:\\Users\\david\\Desktop\\Car\\ProjectFile\\Algorithm",
+                "c:\\Users\\david\\Desktop\\Car\\ProjectFile\\Controller",
+                "c:\\Users\\david\\Desktop\\Car\\ProjectFile\\MotionControl",
+                "c:\\Users\\david\\Desktop\\Car\\ProjectFile\\Peripherals",
+                "c:\\Users\\david\\Desktop\\Car\\ProjectFile\\Protocol",
+                "c:\\Users\\david\\Desktop\\Car\\ProjectFile\\Storage",
+                "c:\\Users\\david\\Desktop\\Car",
                 "c:\\Users\\david\\Desktop\\Car\\STM32CubeMX\\Target_1\\STM32CubeMX\\Src",
                 "c:\\Users\\david\\Desktop\\Car\\STM32CubeMX\\Target_1\\STM32CubeMX\\MDK-ARM",
                 "c:\\Users\\david\\Desktop\\Car\\STM32CubeMX\\Target_1\\STM32CubeMX\\Drivers\\STM32F4xx_HAL_Driver\\Src"

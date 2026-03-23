@@ -1,16 +1,14 @@
 #include "stdint.h"
-
-typedef enum 
-{
-    ONE_SIDE_TURN = 0, //only one side motor turn,when not forward
-    DIFFERENTIAL_TURN = 1 //differential turn,when not forward,no XY movement
-} controlMode; 
+#include <stdbool.h>
 
 typedef struct 
 {
     float forwardPer;
     float turnPer;
-    controlMode mode;
+    float vel;
+    float omega;
+    bool frameLost;
+    bool failSafe;
 }controllerData;
 
 void controllerProcess(uint16_t *CH, controllerData *t);

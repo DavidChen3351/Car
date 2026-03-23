@@ -4,10 +4,7 @@
 #define Nx 2
 #define Nu 1
 #define Nz 1
-#define DELTA_T MOTO_CONTROL_PERIOD_S
-#define DELTA_T_SQUARE  (DELTA_T * DELTA_T)
-#define DELTA_T_CUBE    (DELTA_T * DELTA_T * DELTA_T)  
-#define DELTA_T_QUARE   (DELTA_T * DELTA_T * DELTA_T * DELTA_T)
+
 //x state vector
 //z measurement
 //F state transition matrix

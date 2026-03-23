@@ -1,7 +1,16 @@
-#include "turn.h"
+#include <stdint.h>
+#include "motoConfig.h"
 
-void differentialTurn(turnHandle *t)
+void differentialTurn(float vel, float omega, float motoTarget[2])
 {
+    // float R = vel / omega;//radius
+    float d = WHEEL_DISTANCE / 2.0f; // half of two wheel distance
+
+    motoTarget[0] = vel + d * omega;
+    motoTarget[1] = vel - d * omega;
+}
+
+/*
     if (t->turnPer != 0)
     {
         if (t->turnPer > 0)
@@ -21,4 +30,4 @@ void differentialTurn(turnHandle *t)
         t->targetPer[0] = t->forwardPer;
         t->targetPer[1] = t->forwardPer;
     }
-}
+*/

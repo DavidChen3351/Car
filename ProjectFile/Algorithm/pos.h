@@ -1,18 +1,16 @@
 #pragma once
 
-#include "motoConfig.h"
-
 typedef struct {
-	float d[MOTO_NUM];//distance gain from each moto
-	float motoSpeed[MOTO_NUM];
+	float distanceGain[2];//distance gain from each moto
+	float motoSpeed[2];
 	float x;
 	float y;
 	float speed;
 	float angle;
 	float theta;//derivative of angle
 	float totalDistance;
-}pos;
+}positionHandle;
 
-void posIni(pos *position);
-void posSetDistance(pos *position,float diff,float speed,motoIndex i);
-void posCompute(pos *position);
+void posInit(positionHandle *pos);
+void posSetDistance(positionHandle *pos,float speed[2],float distanceGain[2]);
+void posCompute(positionHandle *pos);

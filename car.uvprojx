@@ -386,11 +386,6 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>MsgQueue.c</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\MsgQueue.c</FilePath>
-            </File>
-            <File>
               <FileName>kalFilter.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\ProjectFile\Algorithm\kalFilter.c</FilePath>
@@ -461,11 +456,6 @@
               <FilePath>.\ProjectFile\Storage\RingBuffer.c</FilePath>
             </File>
             <File>
-              <FileName>Timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\ProjectFile\Peripherals\Timer.c</FilePath>
-            </File>
-            <File>
               <FileName>uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\ProjectFile\Peripherals\uart.c</FilePath>
@@ -484,6 +474,16 @@
               <FileName>Debug.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\ProjectFile\Debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>Encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Peripherals\Encoder.c</FilePath>
+            </File>
+            <File>
+              <FileName>PWM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ProjectFile\Peripherals\PWM.c</FilePath>
             </File>
           </Files>
         </Group>

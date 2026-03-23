@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "motoConfig.h"
 
+typedef motoIndex int;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim9;
 extern TIM_HandleTypeDef htim3;

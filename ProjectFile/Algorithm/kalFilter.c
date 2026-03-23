@@ -1,6 +1,11 @@
 #include "main.h"
 #include "kalFilter.h"
 
+#define DELTA_T MOTO_CONTROL_PERIOD_S
+#define DELTA_T_SQUARE  (DELTA_T * DELTA_T)
+#define DELTA_T_CUBE    (DELTA_T * DELTA_T * DELTA_T)  
+#define DELTA_T_QUARE   (DELTA_T * DELTA_T * DELTA_T * DELTA_T)
+
 void matrixMultiply(float* a, float* b, float* result, uint8_t aRows, uint8_t aCols, uint8_t bCols)
 {
     for (uint8_t i = 0; i < aRows; i++)
@@ -48,8 +53,8 @@ void kalInit(Kal *kal,iniX x,iniP P,Qv var,float motoInputPerDamping)
 /*
 *@para kal pointer to kal structure
 *@para control input,Nu * 1
-*xn+1,n = f * xn,n + G * un
-*Pn+1,n = F * Pn,n * FT + Q
+*x(n+1,n) = f * x(n,n) + G * un
+*P(n+1,n) = F * P(n,n) * FT + Q
 */
 void kalPredict(Kal* kal,u input)
 {

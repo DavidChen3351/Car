@@ -10,49 +10,55 @@
  *this function compute position xy based on distance gain drived from 2 motos
  *new position is accumlated on previous position 
  */
-inline void posCompute(pos *position)
+inline void posCompute(positionHandle *pos)
 {
-	float d;
+	float wheelDistanceGain[2];
+	wheelDistanceGain[0] = pos->distanceGain[0];
+	wheelDistanceGain[1] = pos->distanceGain[1];
+	float carDistanceGain;
 	float newAngle;
 	float angleChange;
 	float lastAngle;
 
-	position->speed = (position->motoSpeed[0] + position->motoSpeed[1]) / 2.0f;
-	position->theta = (position->motoSpeed[1] - position->motoSpeed[0]) / (2.0f * WHEEL_DISTANCE);
-	d = (position->d[0] + position->d[1]) / 2.0f;
+	pos->speed = (pos->motoSpeed[0] + pos->motoSpeed[1]) / 2.0f;
+	pos->theta = (pos->motoSpeed[1] - pos->motoSpeed[0]) / (2.0f * WHEEL_DISTANCE);
+	carDistanceGain = (wheelDistanceGain[0] + wheelDistanceGain[1]) / 2.0f;
 
-	angleChange = (position->d[1] - position->d[0]) / WHEEL_DISTANCE;
-	lastAngle = position->angle;
+	angleChange = (wheelDistanceGain[1] - wheelDistanceGain[0]) / WHEEL_DISTANCE;
+	lastAngle = pos->angle;
 
-	position->x += d * cosf(lastAngle + angleChange / 2.0f);
-	position->y += d * sinf(lastAngle + angleChange / 2.0f);
+	pos->x += carDistanceGain * cosf(lastAngle + angleChange / 2.0f);
+	pos->y += carDistanceGain * sinf(lastAngle + angleChange / 2.0f);
 
 	newAngle = fmodf(lastAngle + angleChange, 2.0f * PI);
 	if (newAngle < 0.0f)
 	{
 		newAngle += 2.0 * PI;
 	}
-	position->angle = newAngle;
-	position->totalDistance += d;
+	pos->angle = newAngle;
+	pos->totalDistance += carDistanceGain;
 
-	//position->d[0] = 0.0f;
-	//position->d[1] = 0.0f;
+	pos->distanceGain[0] = 0.0f;
+	pos->distanceGain[1] = 0.0f;
 }
 
-inline void posIni(pos *position)
+inline void posInit(positionHandle *pos)
 {
-	position->x = 0.0f;
-	position->y = 0.0f;
-	position->angle = 0.0f;
-	position->totalDistance = 0.0f;
-	for (motoIndex i = 0; i < MOTO_NUM; i++)
+	pos->x = 0.0f;
+	pos->y = 0.0f;
+	pos->angle = PI / 2.0f;
+	pos->totalDistance = 0.0f;
+	for (uint8_t i = 0; i < MOTO_NUM; i++)
 	{
-		position->d[i] = 0.0f;
+		pos->distanceGain[i] = 0.0f;
 	}
 }
 
-inline void posSetDistance(pos *position,float diff,float speed,motoIndex i)
+void posSetDistance(positionHandle *pos,float speed[2],float distanceGain[2])
 {
-	position->d[i] = diff;
-	position->motoSpeed[i] = speed;
+	for(int i=0;i<2;i++)
+	{
+		pos->motoSpeed[i] = speed[i];
+		pos->distanceGain[i] += distanceGain[i];
+	}
 }
